@@ -1,9 +1,9 @@
 /*
- * cache.c
- *
+ *  cache.c
+ *  process and manage the cache data
  *  Created on: 2013-10-31
  *      Author: Armink
- *  Note:Cache > CacheData=Data > Value in logic
+ *  Note:Cache > CacheData=Data > Value     in logic
  */
 #include "cache.h"
 
@@ -16,6 +16,11 @@
  */
 CacheErrCode initCache(pCache const cache) {
 	CacheErrCode errorCode = CACHE_NO_ERR;
+	cache->find = findData;
+	cache->add = addData;
+	cache->remove = removeData;
+	cache->get = getValue;
+	cache->put = putValue;
 	cache->headData = NULL;
 	cache->tailData = NULL;
 	return errorCode;

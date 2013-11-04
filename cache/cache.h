@@ -58,10 +58,18 @@ typedef struct _CacheData{
 	struct _CacheData* next;            /**< point to next CacheData */
 }CacheData, *pCacheData;
 
-/* Cache supply functions set for app */
-typedef struct {
-	pCacheData headData ;
-	pCacheData tailData ;
+/* Cache supply functions set and CacheData list for app */
+typedef struct _Cache {
+	pCacheData (*find)(struct _Cache* cache, const char* name);
+	CacheErrCode (*add)(struct _Cache* cache, char* name, uint8_t length,
+			uint8_t level, uint16_t* value, void (*valueChangedListener)(void));
+	CacheErrCode (*remove)(struct _Cache* cache, const char* name);
+	CacheErrCode (*put)(struct _Cache* cache, const char* name,
+			uint16_t* value);
+	CacheErrCode (*get)(struct _Cache* cache, const char* name,
+			uint16_t* value);
+	pCacheData headData;
+	pCacheData tailData;
 } Cache, *pCache;
 
 CacheErrCode initCache(pCache const cache);
