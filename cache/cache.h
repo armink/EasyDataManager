@@ -64,20 +64,21 @@ typedef struct _Cache {
 	CacheErrCode (*add)(struct _Cache* cache, char* name, uint8_t length,
 			uint8_t level, uint16_t* value, void (*valueChangedListener)(void));
 	CacheErrCode (*remove)(struct _Cache* cache, const char* name);
-	CacheErrCode (*put)(struct _Cache* cache, const char* name,
-			uint16_t* value);
-	CacheErrCode (*get)(struct _Cache* cache, const char* name,
-			uint16_t* value);
+	CacheErrCode (*put)(struct _Cache* cache, const char* name, uint16_t* value);
+	CacheErrCode (*get)(struct _Cache* cache, const char* name, uint16_t* value);
+	CacheErrCode (*getLength)(struct _Cache* cache, uint16_t* length);
+	char name[CACHE_NAME_MAX]; /**< the name of CacheData */
 	pCacheData headData;
 	pCacheData tailData;
 } Cache, *pCache;
 
-CacheErrCode initCache(pCache const cache);
+CacheErrCode initCache(pCache const cache, const char* name);
 pCacheData findData(pCache const cache, const char* name);
 CacheErrCode addData(pCache const cache, char* name, uint8_t length,
 		uint8_t level, uint16_t* value, void (*valueChangedListener)(void));
 CacheErrCode removeData(pCache const cache, const char* name);
 CacheErrCode getValue(pCache const cache, const char* name, uint16_t* value);
 CacheErrCode putValue(pCache const cache, const char* name, uint16_t* value);
+CacheErrCode getLength(pCache const cache, uint16_t* length);
 
 #endif /* DM_H_ */

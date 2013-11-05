@@ -10,7 +10,7 @@ int main()
 {
 	Cache cache;
 	uint16_t valueTemp[CACHE_LENGTH_MAX];
-	initCache(&cache);
+	initCache(&cache,"cache");
 	valueTemp[0] = 0;
 	valueTemp[1] = 1;
 	valueTemp[2] = 2;
@@ -19,6 +19,7 @@ int main()
 	cache.add(&cache,"压力",2,2,valueTemp,NULL);
 	cache.add(&cache,"湿度",3,3,valueTemp,NULL);
 	cache.add(&cache,"PM2.5",4,4,valueTemp,NULL);
+	cache.getLength(&cache,&valueTemp[4]);
 	cache.get(&cache,"温度",valueTemp);
 	cache.get(&cache,"压力",valueTemp);
 	cache.get(&cache,"湿度",valueTemp);
@@ -31,6 +32,7 @@ int main()
 	cache.get(&cache,"PM2.5",valueTemp);
 	cache.add(&cache,"PM2.5",4,4,valueTemp,NULL);
 	cache.get(&cache,"PM2.5",valueTemp);
+	cache.getLength(&cache,&valueTemp[4]);
 	valueTemp[0] = 3;
 	valueTemp[1] = 2;
 	valueTemp[2] = 1;
@@ -39,6 +41,7 @@ int main()
 	cache.get(&cache,"PM2.5",valueTemp);
 	cache.remove(&cache,"PM2.5");
 	cache.get(&cache,"PM2.5",valueTemp);
+	cache.getLength(&cache,&valueTemp[4]);
 //	cache.put(&cache,"PM2.5",valueTemp);
 //	cache.get(&cache,"温度",valueTemp);
 //	cache.get(&cache,"压力",valueTemp);

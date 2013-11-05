@@ -14,13 +14,21 @@
  *
  * @return error code
  */
-CacheErrCode initCache(pCache const cache) {
+CacheErrCode initCache(pCache const cache, const char* name) {
 	CacheErrCode errorCode = CACHE_NO_ERR;
+
+	if ((name == NULL) || (strlen(name) > CACHE_NAME_MAX)) {
+		printf("the name of %s can not be creat for list\n", name);
+		errorCode = CACHE_NAME_ERROR;
+	} else {
+		strcpy(cache->name, name);
+	}
 	cache->find = findData;
 	cache->add = addData;
 	cache->remove = removeData;
 	cache->get = getValue;
 	cache->put = putValue;
+	cache->getLength = getLength;
 	cache->headData = NULL;
 	cache->tailData = NULL;
 	return errorCode;
@@ -40,7 +48,7 @@ pCacheData findData(pCache const cache, const char* name) {
 	assert((name != NULL) && (strlen(name) <= CACHE_NAME_MAX));
 	//this cache is null
 	if (cache->headData == NULL) {
-		printf("the cache data list is NULL,find data fail\n");
+		printf("the %s's data list is NULL,find data fail\n",cache->name);
 		return NULL;
 	}
 	/* search the data from list*/
@@ -121,7 +129,7 @@ CacheErrCode addData(pCache const cache, char* name, uint8_t length,
 			cache->tailData->next = data;
 			cache->tailData = data;
 		}
-		printf("add %s cache data to list is success\n", name);
+		printf("add %s to data list is success\n", name);
 	} else if (errorCode != CACHE_NO_ERR) {
 		free(data);
 	}
@@ -143,7 +151,7 @@ CacheErrCode removeData(pCache const cache, const char* name) {
 	assert((name != NULL) && (strlen(name) <= CACHE_NAME_MAX));
 	/* check cache initialize */
 	if (cache->headData == NULL) {
-		printf("the cache data list is NULL,remove data fail\n");
+		printf("the %s's data list is NULL,remove data fail\n",cache->name);
 		errorCode = CACHE_NO_VALUE;
 	}
 	/* search the data from list*/
@@ -247,4 +255,28 @@ CacheErrCode putValue(pCache const cache, const char* name, uint16_t* value) {
 	return errorCode;
 }
 
-
+/**
+ * This function will get the CacheData list total length.
+ *
+ * @param cache the cache pointer
+ * @param length the total length of list
+ *
+ * @return error code
+ */
+CacheErrCode getLength(pCache const cache, uint16_t* length) {
+	CacheErrCode errorCode = CACHE_NO_ERR;
+	pCacheData data = cache->headData;
+	*length = 0;
+	for (;;) {
+		if (data == NULL) {
+			printf("the %s's length is %d\n", cache->name, *length);
+			break;
+		} else {
+			data = data->next;
+			(*length)++;
+		}
+	}
+	if ((*length) == 0)
+		errorCode = CACHE_NOT_INIT;
+	return errorCode;
+}
