@@ -66,7 +66,8 @@ typedef struct _Cache {
 	CacheErrCode (*remove)(struct _Cache* cache, const char* name);
 	CacheErrCode (*put)(struct _Cache* cache, const char* name, uint16_t* value);
 	CacheErrCode (*get)(struct _Cache* cache, const char* name, uint16_t* value);
-	CacheErrCode (*getLength)(struct _Cache* cache, uint16_t* length);
+	CacheErrCode (*getSize)(struct _Cache* cache, uint16_t* length,
+			uint32_t* size);
 	char name[CACHE_NAME_MAX]; /**< the name of CacheData */
 	pCacheData headData;
 	pCacheData tailData;
@@ -79,6 +80,6 @@ CacheErrCode addData(pCache const cache, char* name, uint8_t length,
 CacheErrCode removeData(pCache const cache, const char* name);
 CacheErrCode getValue(pCache const cache, const char* name, uint16_t* value);
 CacheErrCode putValue(pCache const cache, const char* name, uint16_t* value);
-CacheErrCode getLength(pCache const cache, uint16_t* length);
+CacheErrCode getSize(pCache const cache, uint16_t* length, uint32_t* size);
 
 #endif /* DM_H_ */

@@ -28,7 +28,7 @@ CacheErrCode initCache(pCache const cache, const char* name) {
 	cache->remove = removeData;
 	cache->get = getValue;
 	cache->put = putValue;
-	cache->getLength = getLength;
+	cache->getSize = getSize;
 	cache->headData = NULL;
 	cache->tailData = NULL;
 	return errorCode;
@@ -263,17 +263,20 @@ CacheErrCode putValue(pCache const cache, const char* name, uint16_t* value) {
  *
  * @return error code
  */
-CacheErrCode getLength(pCache const cache, uint16_t* length) {
+CacheErrCode getSize(pCache const cache, uint16_t* length, uint32_t* size) {
 	CacheErrCode errorCode = CACHE_NO_ERR;
 	pCacheData data = cache->headData;
 	*length = 0;
+	*size = 0;
 	for (;;) {
 		if (data == NULL) {
-			printf("the %s's length is %d\n", cache->name, *length);
+			printf("the %s's length is %d,size is %ld\n", cache->name, *length,
+					*size);
 			break;
 		} else {
-			data = data->next;
 			(*length)++;
+			(*size) += data->length * sizeof(uint16_t);
+			data = data->next;
 		}
 	}
 	if ((*length) == 0)
