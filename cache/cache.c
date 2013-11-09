@@ -132,6 +132,7 @@ CacheErrCode addData(pCache const cache, char* name, uint8_t length,
 		printf("add %s to data list is success\n", name);
 	} else if (errorCode != CACHE_NO_ERR) {
 		free(data);
+		data = NULL;
 	}
 	return errorCode;
 }
@@ -192,7 +193,9 @@ CacheErrCode removeData(pCache const cache, const char* name) {
 			data = dataTemp; /* data will be freed in the end */
 		}
 		free(dataTemp->value);
+		dataTemp->value = NULL;
 		free(dataTemp);
+		dataTemp = NULL;
 		printf("remove %s data node is success\n", name);
 	}
 	return errorCode;
