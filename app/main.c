@@ -5,9 +5,9 @@
  *      Author: Armink
  */
 #include "cache.h"
+#include "pthread_pool.h"
 #include <stdio.h>
-int main()
-{
+void testCache(void){
 	Cache cache;
 	uint16_t cacheLength,valueTemp[CACHE_LENGTH_MAX];
 	uint32_t cacheSize;
@@ -56,5 +56,30 @@ int main()
 //	cache.add(&cache,"温度",1,1,valueTemp,NULL);
 //	cache.get(&cache,"温度",valueTemp);
 
+}
+
+void *testProcess(void *arg) {
+	printf("thread id is %#x, working on task %d%d\n", pthread_self(),
+			*(int *) arg);
+	sleep(5);
+	return NULL;
+}
+
+void testThreadPoll(void){
+	uint8_t i , dataTemp[10];
+	ThreadPool pool;
+	init(&pool, 4);
+	for (i = 0; i < 10; i++) {
+		dataTemp[i] = i;
+		pool.addTask(&pool,testProcess,&dataTemp[i]);
+	}
+	sleep(20);
+	pool.destroy(&pool);
+}
+int main()
+{
+	/* 关闭printf缓冲输出 */
+	setbuf(stdout, NULL);
+	testThreadPoll();
 	return 0;
 }

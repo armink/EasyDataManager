@@ -7,6 +7,17 @@
  */
 #include "cache.h"
 
+static pCacheData findData(pCache const cache, const char* name);
+static CacheErrCode addData(pCache const cache, char* name, uint8_t length,
+		uint8_t level, uint16_t* value, void (*valueChangedListener)(void));
+static CacheErrCode removeData(pCache const cache, const char* name);
+static CacheErrCode getValue(pCache const cache, const char* name,
+		uint16_t* value);
+static CacheErrCode putValue(pCache const cache, const char* name,
+		uint16_t* value);
+static CacheErrCode getSize(pCache const cache, uint16_t* length,
+		uint32_t* size);
+
 /**
  * This function will initialize cache model.
  *
@@ -29,8 +40,8 @@ CacheErrCode initCache(pCache const cache, const char* name) {
 	cache->get = getValue;
 	cache->put = putValue;
 	cache->getSize = getSize;
-	cache->headData = NULL;
-	cache->tailData = NULL;
+	cache->dataHead = NULL;
+	cache->dataTail = NULL;
 	return errorCode;
 }
 
@@ -43,11 +54,11 @@ CacheErrCode initCache(pCache const cache, const char* name) {
  * @return the CacheData point which has found,If not found will return NULL.
  */
 pCacheData findData(pCache const cache, const char* name) {
-	pCacheData data = cache->headData;
+	pCacheData data = cache->dataHead;
 
 	assert((name != NULL) && (strlen(name) <= CACHE_NAME_MAX));
 	//this cache is null
-	if (cache->headData == NULL) {
+	if (cache->dataHead == NULL) {
 		printf("the %s's data list is NULL,find data fail\n",cache->name);
 		return NULL;
 	}
@@ -119,15 +130,15 @@ CacheErrCode addData(pCache const cache, char* name, uint8_t length,
 		data->valueChangedListener = valueChangedListener;
 		data->next = NULL;
 		/* if list is NULL ,then head node is equal of tail node*/
-		if (cache->headData == NULL) {
-			cache->headData = cache->tailData = data;
-		} else if ((cache->headData == cache->tailData) /* the list has one node */
-		&& (cache->headData != NULL)) {
-			cache->headData->next = data;
-			cache->tailData = data;
+		if (cache->dataHead == NULL) {
+			cache->dataHead = cache->dataTail = data;
+		} else if ((cache->dataHead == cache->dataTail) /* the list has one node */
+		&& (cache->dataHead != NULL)) {
+			cache->dataHead->next = data;
+			cache->dataTail = data;
 		} else { /* the list has more than one node*/
-			cache->tailData->next = data;
-			cache->tailData = data;
+			cache->dataTail->next = data;
+			cache->dataTail = data;
 		}
 		printf("add %s to data list is success\n", name);
 	} else if (errorCode != CACHE_NO_ERR) {
@@ -147,11 +158,11 @@ CacheErrCode addData(pCache const cache, char* name, uint8_t length,
  */
 CacheErrCode removeData(pCache const cache, const char* name) {
 	CacheErrCode errorCode = CACHE_NO_ERR;
-	pCacheData data = cache->headData, dataTemp;
+	pCacheData data = cache->dataHead, dataTemp;
 
 	assert((name != NULL) && (strlen(name) <= CACHE_NAME_MAX));
 	/* check cache initialize */
-	if (cache->headData == NULL) {
+	if (cache->dataHead == NULL) {
 		printf("the %s's data list is NULL,remove data fail\n",cache->name);
 		errorCode = CACHE_NO_VALUE;
 	}
@@ -175,17 +186,17 @@ CacheErrCode removeData(pCache const cache, const char* name) {
 	}
 	if (errorCode == CACHE_NO_ERR) {
 		/* delete data is head node */
-		if (data == cache->headData) {
+		if (data == cache->dataHead) {
 			/* the list has one node */
-			if ((cache->headData == cache->tailData)
-					&& (cache->headData != NULL)) {
-				cache->headData = cache->tailData = NULL;
+			if ((cache->dataHead == cache->dataTail)
+					&& (cache->dataHead != NULL)) {
+				cache->dataHead = cache->dataTail = NULL;
 			} else { /* the list has more than one node*/
-				cache->headData = data->next;
+				cache->dataHead = data->next;
 			}
-		} else if (data->next == cache->tailData) {/* delete data is tail node */
-			cache->tailData = data;
-			cache->tailData->next = NULL;
+		} else if (data->next == cache->dataTail) {/* delete data is tail node */
+			cache->dataTail = data;
+			cache->dataTail->next = NULL;
 			data = data->next; /* data will be freed in the end */
 		} else {
 			dataTemp = data->next;
@@ -242,7 +253,7 @@ CacheErrCode getValue(pCache const cache, const char* name, uint16_t* value) {
  */
 CacheErrCode putValue(pCache const cache, const char* name, uint16_t* value) {
 	CacheErrCode errorCode = CACHE_NO_ERR;
-	pCacheData data = cache->headData;
+	pCacheData data = cache->dataHead;
 	uint8_t i;
 	uint16_t* dataValue;
 	/* the data must exist in list */
@@ -268,7 +279,7 @@ CacheErrCode putValue(pCache const cache, const char* name, uint16_t* value) {
  */
 CacheErrCode getSize(pCache const cache, uint16_t* length, uint32_t* size) {
 	CacheErrCode errorCode = CACHE_NO_ERR;
-	pCacheData data = cache->headData;
+	pCacheData data = cache->dataHead;
 	*length = 0;
 	*size = 0;
 	for (;;) {
