@@ -22,10 +22,12 @@
 #endif
 
 void initLogger(void);
+void destroyLogger(void);
 
 typedef struct {
-	void (*debug)(const char* format, ...);
-	void (*destroy)(void);
+	void (*d)(const char* format, ...);
+	void (*i)(const char* format, ...);
+	void (*e)(const char* format, ...);
 }Logger;
 
 /* logger object */

@@ -61,7 +61,7 @@ void testCache(void){
 }
 
 void *testProcess(void *arg) {
-	Log.debug("this thread arg is %d\n", *(uint8_t *) arg);
+	Log.d("this thread arg is %d", *(uint8_t *) arg);
 	sleep(5);
 	return NULL;
 }

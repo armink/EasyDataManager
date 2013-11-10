@@ -39,9 +39,9 @@ ThreadPoolErrCode initThreadPool(pThreadPool const pool, uint8_t maxThreadNum) {
 		pool->threadID = (pthread_t *) malloc(maxThreadNum * sizeof(pthread_t));
 		for (i = 0; i < maxThreadNum; i++) {
 			pthread_create(&(pool->threadID[i]), NULL, threadJob, pool);
-			Log.debug("create thread success.Current total thread number is %d\n",i);
+			Log.d("create thread success.Current total thread number is %d",i);
 		}
-		Log.debug("initialize thread poll success!\n");
+		Log.d("initialize thread poll success!");
 	}
 	return errorCode;
 }
@@ -81,7 +81,7 @@ ThreadPoolErrCode addTask(pThreadPool const pool, void *(*process)(void *arg),
 	pthread_mutex_unlock(&(pool->queueLock));
 	/* wake up a waiting thread to process task */
 	pthread_cond_signal(&(pool->queueReady));
-	Log.debug("add a task to task queue success.Current task total number is %d\n",pool->curWaitThreadNum);
+	Log.d("add a task to task queue success.Current task total number is %d",pool->curWaitThreadNum);
 	return errorCode;
 }
 
@@ -105,7 +105,7 @@ ThreadPoolErrCode destroy(pThreadPool pool) {
 		pthread_cond_broadcast(&(pool->queueReady));
 		/* wait all thread exit */
 		for (i = 0; i < pool->maxThreadNum; i++) {
-			Log.debug("Thread pool will destroy,waiting the thread exit\n");
+			Log.d("Thread pool will destroy,waiting the thread exit");
 			pthread_join(pool->threadID[i], NULL);
 		}
 		/* release memory */
@@ -123,7 +123,7 @@ ThreadPoolErrCode destroy(pThreadPool pool) {
 		/* release memory */
 		free(pool);
 		pool = NULL;
-		Log.debug("Thread pool destroy success\n");
+		Log.d("Thread pool destroy success");
 	}
 	return errorCode;
 }
@@ -147,7 +147,7 @@ void* threadJob(void* arg) {
 		 * Before thread block the queueLock will unlock.
 		 * After thread wake up ,the queueLock will relock.*/
 		while (pool->curWaitThreadNum == 0 && !pool->isShutdown) {
-			Log.debug("the thread waiting for task add to task queue\n",
+			Log.d("the thread waiting for task add to task queue",
 					pthread_self());
 			pthread_cond_wait(&(pool->queueReady), &(pool->queueLock));
 		}

@@ -12,7 +12,6 @@ static uint8_t isOpenLog = FALSE;
 static uint8_t isInitLog = FALSE;
 
 static void debug(const char* format, ...);
-static void destroy(void);
 static void printTime(void);
 static void printThreadID(void);
 
@@ -24,8 +23,8 @@ void initLogger(void) {
 	isOpenLog = TRUE;
 	pthread_mutex_init(&printLock, NULL);
 	isInitLog = TRUE;
-	Log.debug = debug;
-	Log.destroy = destroy;
+	Log.d = debug;
+	printf("Logger initialize success");
 }
 
 /**
@@ -38,7 +37,7 @@ void initLogger(void) {
 void debug(const char* format, ...) {
 	va_list args;
 	if (!isInitLog) {
-		printf("Logger is not initialize \n");
+		printf("Logger is not initialize");
 		return;
 	}
 	if (!isOpenLog) {
@@ -52,6 +51,7 @@ void debug(const char* format, ...) {
 	printThreadID();
 	/* must use vprintf to print */
 	vprintf(format, args);
+	printf("\n");
 	pthread_mutex_unlock(&printLock);
 	va_end(args);
 }
@@ -60,7 +60,7 @@ void debug(const char* format, ...) {
  * This function destroy the logger.
  *
  */
-void destroy(void) {
+void destroyLogger(void) {
 	isOpenLog = FALSE;
 	isInitLog = FALSE;
 }
@@ -71,7 +71,7 @@ void destroy(void) {
  */
 void printThreadID(void){
 #if defined(WIN32) || defined(WIN64)
-	printf("tid:%ld ",GetCurrentThreadId());
+	printf("tid:%04ld ",GetCurrentThreadId());
 #else
 	printf("tid:%#x ",pthread_self());
 #endif
