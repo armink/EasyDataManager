@@ -9,7 +9,8 @@
 
 static pCacheData findData(pCache const cache, const char* name);
 static CacheErrCode addData(pCache const cache, char* name, uint8_t length,
-		uint8_t level, uint16_t* value, void (*valueChangedListener)(void));
+		uint8_t level, uint16_t* value,
+		void* (*valueChangedListener)(void *arg));
 static CacheErrCode removeData(pCache const cache, const char* name);
 static CacheErrCode getValue(pCache const cache, const char* name,
 		uint16_t* value);
@@ -22,14 +23,17 @@ static CacheErrCode getSize(pCache const cache, uint16_t* length,
  * This function will initialize cache model.
  *
  * @param cache the cache pointer
+ * @param name the cache name
+ * @param maxThreadNum the cache use max threads number in thread pool
  *
  * @return error code
  */
-CacheErrCode initCache(pCache const cache, const char* name) {
+CacheErrCode initCache(pCache const cache, const char* name,
+		uint8_t maxThreadNum) {
 	CacheErrCode errorCode = CACHE_NO_ERR;
 
 	if ((name == NULL) || (strlen(name) > CACHE_NAME_MAX)) {
-		Log.d("the name of %s can not be creat for list", name);
+		Log.d("the name of %s can not be create for list", name);
 		errorCode = CACHE_NAME_ERROR;
 	} else {
 		strcpy(cache->name, name);
@@ -42,6 +46,9 @@ CacheErrCode initCache(pCache const cache, const char* name) {
 	cache->getSize = getSize;
 	cache->dataHead = NULL;
 	cache->dataTail = NULL;
+	/* initialize the thread pool */
+	cache->pool = (pThreadPool)malloc(sizeof(ThreadPool));
+	initThreadPool(cache->pool,maxThreadNum);
 	return errorCode;
 }
 
@@ -90,7 +97,8 @@ pCacheData findData(pCache const cache, const char* name) {
  * @return error code
  */
 CacheErrCode addData(pCache const cache, char* name, uint8_t length,
-		uint8_t level, uint16_t* value, void (*valueChangedListener)(void)) {
+		uint8_t level, uint16_t* value,
+		void* (*valueChangedListener)(void *arg)) {
 	CacheErrCode errorCode = CACHE_NO_ERR;
 	pCacheData data;
 
@@ -254,7 +262,7 @@ CacheErrCode getValue(pCache const cache, const char* name, uint16_t* value) {
 CacheErrCode putValue(pCache const cache, const char* name, uint16_t* value) {
 	CacheErrCode errorCode = CACHE_NO_ERR;
 	pCacheData data = cache->dataHead;
-	uint8_t i;
+	uint8_t i, isValueChange = FALSE;
 	uint16_t* dataValue;
 	/* the data must exist in list */
 	if ((data = findData(cache, name)) == NULL) {
@@ -263,8 +271,15 @@ CacheErrCode putValue(pCache const cache, const char* name, uint16_t* value) {
 		dataValue = data->value;
 		for (i = 0; i < data->length; i++) {
 			Log.d("put %s value%d is %d", data->name, i, *(value));
+			if (*(dataValue) != *(value)) {
+				isValueChange = TRUE;
+			}
 			*(dataValue++) = *(value++);
 		}
+	}
+	/* If value was changed.Execution valueChangedListener */
+	if ((isValueChange) && (data->valueChangedListener != NULL)) {
+		cache->pool->addTask(cache->pool, data->valueChangedListener, data);
 	}
 	return errorCode;
 }

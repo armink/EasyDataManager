@@ -15,6 +15,7 @@
 #include <assert.h>
 #include <string.h>
 #include "log.h"
+#include "pthread_pool.h"
 
 #define CACHE_NAME_MAX     20       /**< CacheData max name length */
 #define CACHE_LENGTH_MAX   64       /**< value max length */
@@ -39,7 +40,7 @@ typedef struct _CacheData{
 	uint8_t length;                     /**< value length */
 	uint8_t level;                      /**< refresh level.If level is 0,value will not refresh */
 	uint16_t* value;                    /**< the value pointer*/
-	void (*valueChangedListener)(void); /**< It will call when the CacheData's value has changed */
+	void* (*valueChangedListener)(void *arg); /**< It will call when the CacheData's value has changed */
 	struct _CacheData* next;            /**< point to next CacheData */
 }CacheData, *pCacheData;
 
@@ -47,7 +48,8 @@ typedef struct _CacheData{
 typedef struct _Cache {
 	pCacheData (*find)(struct _Cache* const cache, const char* name);
 	CacheErrCode (*add)(struct _Cache* const cache, char* name, uint8_t length,
-			uint8_t level, uint16_t* value, void (*valueChangedListener)(void));
+			uint8_t level, uint16_t* value,
+			void* (*valueChangedListener)(void *arg));
 	CacheErrCode (*remove)(struct _Cache* const cache, const char* name);
 	CacheErrCode (*put)(struct _Cache* const cache, const char* name,
 			uint16_t* value);
@@ -58,8 +60,10 @@ typedef struct _Cache {
 	char name[CACHE_NAME_MAX]; /**< the name of CacheData */
 	pCacheData dataHead;
 	pCacheData dataTail;
+	pThreadPool pool;
 } Cache, *pCache;
 
-CacheErrCode initCache(pCache const cache, const char* name);
+CacheErrCode initCache(pCache const cache, const char* name,
+		uint8_t maxThreadNum);
 
 #endif /* DM_H_ */

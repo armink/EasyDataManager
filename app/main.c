@@ -9,31 +9,38 @@
 #include "log.h"
 #include <stdio.h>
 
+void *valueChangedListener(void *arg) {
+	pCacheData data = (pCacheData)arg;
+	Log.d("this data %s was changed", data->name);
+	sleep(5);
+	return NULL;
+}
+
 void testCache(void){
 	Cache cache;
 	uint16_t cacheLength,valueTemp[CACHE_LENGTH_MAX];
 	uint32_t cacheSize;
-	initCache(&cache,"cache");
+	initCache(&cache,"cache",4);
 	valueTemp[0] = 0;
 	valueTemp[1] = 1;
 	valueTemp[2] = 2;
 	valueTemp[3] = 3;
-	cache.add(&cache,"温度",1,1,valueTemp,NULL);
-	cache.add(&cache,"压力",2,2,valueTemp,NULL);
-	cache.add(&cache,"湿度",3,3,valueTemp,NULL);
-	cache.add(&cache,"PM2.5",4,4,valueTemp,NULL);
+	cache.add(&cache,"温度",1,1,valueTemp,valueChangedListener);
+	cache.add(&cache,"压力",2,2,valueTemp,valueChangedListener);
+	cache.add(&cache,"湿度",3,3,valueTemp,valueChangedListener);
+	cache.add(&cache,"PM2.5",4,4,valueTemp,valueChangedListener);
 	cache.getSize(&cache,&cacheLength,&cacheSize);
 	cache.get(&cache,"温度",valueTemp);
 	cache.get(&cache,"压力",valueTemp);
 	cache.get(&cache,"湿度",valueTemp);
 	cache.get(&cache,"PM2.5",valueTemp);
 	cache.remove(&cache,"温度");
-	cache.remove(&cache,"压力");
-	cache.remove(&cache,"湿度");
-	cache.remove(&cache,"PM2.5");
-	cache.remove(&cache,"PM2.5");
+//	cache.remove(&cache,"压力");
+//	cache.remove(&cache,"湿度");
+//	cache.remove(&cache,"PM2.5");
+//	cache.remove(&cache,"PM2.5");
 	cache.get(&cache,"PM2.5",valueTemp);
-	cache.add(&cache,"PM2.5",4,4,valueTemp,NULL);
+//	cache.add(&cache,"PM2.5",4,4,valueTemp,valueChangedListener);
 	cache.get(&cache,"PM2.5",valueTemp);
 	cache.getSize(&cache,&cacheLength,&cacheSize);
 	valueTemp[0] = 3;
@@ -45,19 +52,9 @@ void testCache(void){
 	cache.remove(&cache,"PM2.5");
 	cache.get(&cache,"PM2.5",valueTemp);
 	cache.getSize(&cache,&cacheLength,&cacheSize);
-//	cache.put(&cache,"PM2.5",valueTemp);
-//	cache.get(&cache,"温度",valueTemp);
-//	cache.get(&cache,"压力",valueTemp);
-//	cache.get(&cache,"湿度",valueTemp);
-//	cache.get(&cache,"PM2.5",valueTemp);
-//
-//	cache.remove(&cache,"PM2.5");
-//	cache.get(&cache,"PM2.5",valueTemp);
-//	cache.remove(&cache,"温度");
-//	cache.findData(&cache,"温度");
-//	cache.add(&cache,"温度",1,1,valueTemp,NULL);
-//	cache.get(&cache,"温度",valueTemp);
 
+	sleep(10);
+	cache.pool->destroy(cache.pool);
 }
 
 void *testProcess(void *arg) {
@@ -82,7 +79,7 @@ int main()
 	/* 关闭printf缓冲输出 */
 	setbuf(stdout, NULL);
 	initLogger();
-
-	testThreadPoll();
+	testCache();
+//	testThreadPoll();
 	return 0;
 }

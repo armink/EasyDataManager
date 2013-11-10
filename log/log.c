@@ -24,7 +24,6 @@ void initLogger(void) {
 	pthread_mutex_init(&printLock, NULL);
 	isInitLog = TRUE;
 	Log.d = debug;
-	printf("Logger initialize success");
 }
 
 /**
@@ -63,6 +62,7 @@ void debug(const char* format, ...) {
 void destroyLogger(void) {
 	isOpenLog = FALSE;
 	isInitLog = FALSE;
+	pthread_mutex_destroy(&printLock);
 }
 
 /**

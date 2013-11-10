@@ -41,7 +41,7 @@ ThreadPoolErrCode initThreadPool(pThreadPool const pool, uint8_t maxThreadNum) {
 			pthread_create(&(pool->threadID[i]), NULL, threadJob, pool);
 			Log.d("create thread success.Current total thread number is %d",i);
 		}
-		Log.d("initialize thread poll success!");
+		Log.d("initialize thread pool success!");
 	}
 	return errorCode;
 }
@@ -63,7 +63,7 @@ ThreadPoolErrCode addTask(pThreadPool const pool, void *(*process)(void *arg),
 	newtask->process = process;
 	newtask->arg = arg;
 	newtask->next = NULL;
-	/* lock thread poll */
+	/* lock thread pool */
 	pthread_mutex_lock(&(pool->queueLock));
 	member = pool->queueHead;
 	/* task queue is NULL */
@@ -140,7 +140,7 @@ void* threadJob(void* arg) {
 	while (1) {
 		pool = (pThreadPool)arg;
 		pTask task = NULL;
-		/* lock thread poll */
+		/* lock thread pool */
 		pthread_mutex_lock(&(pool->queueLock));
 		/* If waiting thread number is 0 ,and thread is not shutdown.
 		 * The thread will block.
