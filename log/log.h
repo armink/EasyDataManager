@@ -12,8 +12,14 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <pthread.h>
-#include <time.h>
 #include "types.h"
+
+#include <time.h>
+#if defined(WIN32) || defined(WIN64)
+#include <windows.h>
+#else
+
+#endif
 
 void initLogger(void);
 
@@ -22,6 +28,7 @@ typedef struct {
 	void (*destroy)(void);
 }Logger;
 
+/* logger object */
 Logger Log;
 
 #endif /* LOG_H_ */

@@ -39,7 +39,7 @@ ThreadPoolErrCode initThreadPool(pThreadPool const pool, uint8_t maxThreadNum) {
 		pool->threadID = (pthread_t *) malloc(maxThreadNum * sizeof(pthread_t));
 		for (i = 0; i < maxThreadNum; i++) {
 			pthread_create(&(pool->threadID[i]), NULL, threadJob, pool);
-			Log.debug("create thread %#x in thread pool success.Current total thread number is %d\n",pool->threadID[i],i);
+			Log.debug("create thread success.Current total thread number is %d\n",i);
 		}
 		Log.debug("initialize thread poll success!\n");
 	}
@@ -81,7 +81,7 @@ ThreadPoolErrCode addTask(pThreadPool const pool, void *(*process)(void *arg),
 	pthread_mutex_unlock(&(pool->queueLock));
 	/* wake up a waiting thread to process task */
 	pthread_cond_signal(&(pool->queueReady));
-	Log.debug("add a task to taskQueue success.Current task total number is %d\n",pool->curWaitThreadNum);
+	Log.debug("add a task to task queue success.Current task total number is %d\n",pool->curWaitThreadNum);
 	return errorCode;
 }
 
@@ -105,7 +105,7 @@ ThreadPoolErrCode destroy(pThreadPool pool) {
 		pthread_cond_broadcast(&(pool->queueReady));
 		/* wait all thread exit */
 		for (i = 0; i < pool->maxThreadNum; i++) {
-			Log.debug("Thread pool will destroy,Waiting the thread %#x exit\n",pool->threadID[i]);
+			Log.debug("Thread pool will destroy,waiting the thread exit\n");
 			pthread_join(pool->threadID[i], NULL);
 		}
 		/* release memory */
@@ -147,7 +147,7 @@ void* threadJob(void* arg) {
 		 * Before thread block the queueLock will unlock.
 		 * After thread wake up ,the queueLock will relock.*/
 		while (pool->curWaitThreadNum == 0 && !pool->isShutdown) {
-			Log.debug("the thread %#x waiting for task add to taskQueue\n",
+			Log.debug("the thread waiting for task add to task queue\n",
 					pthread_self());
 			pthread_cond_wait(&(pool->queueReady), &(pool->queueLock));
 		}

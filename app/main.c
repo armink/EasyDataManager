@@ -61,7 +61,7 @@ void testCache(void){
 }
 
 void *testProcess(void *arg) {
-	Log.debug("thread id is %#x, arg is %d\n", pthread_self(), *(uint8_t *) arg);
+	Log.debug("this thread arg is %d\n", *(uint8_t *) arg);
 	sleep(5);
 	return NULL;
 }
@@ -81,16 +81,8 @@ int main()
 {
 	/* πÿ±’printfª∫≥Â ‰≥ˆ */
 	setbuf(stdout, NULL);
-
-	SYSTEMTIME currentTime;
-	GetSystemTime(&currentTime);
-	printf("time: %u/%u/%u %u:%u:%u:%u %d\n",
-	currentTime.wYear,currentTime.wMonth,currentTime.wDay,
-	currentTime.wHour,currentTime.wMinute,currentTime.wSecond,
-	currentTime.wMilliseconds,currentTime.wDayOfWeek);
-
 	initLogger();
-	Log.debug("Hello ¿œ∆≈% \n");
+
 	testThreadPoll();
 	return 0;
 }
