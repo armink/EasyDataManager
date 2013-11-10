@@ -6,7 +6,9 @@
  */
 #include "cache.h"
 #include "pthread_pool.h"
+#include "log.h"
 #include <stdio.h>
+
 void testCache(void){
 	Cache cache;
 	uint16_t cacheLength,valueTemp[CACHE_LENGTH_MAX];
@@ -59,8 +61,7 @@ void testCache(void){
 }
 
 void *testProcess(void *arg) {
-	printf("thread id is %#x, working on task %d%d\n", pthread_self(),
-			*(int *) arg);
+	Log.debug("thread id is %#x, arg is %d\n", pthread_self(), *(uint8_t *) arg);
 	sleep(5);
 	return NULL;
 }
@@ -68,7 +69,7 @@ void *testProcess(void *arg) {
 void testThreadPoll(void){
 	uint8_t i , dataTemp[10];
 	ThreadPool pool;
-	init(&pool, 4);
+	initThreadPool(&pool, 4);
 	for (i = 0; i < 10; i++) {
 		dataTemp[i] = i;
 		pool.addTask(&pool,testProcess,&dataTemp[i]);
@@ -80,6 +81,16 @@ int main()
 {
 	/* ¹Ø±Õprintf»º³åÊä³ö */
 	setbuf(stdout, NULL);
+
+	SYSTEMTIME currentTime;
+	GetSystemTime(&currentTime);
+	printf("time: %u/%u/%u %u:%u:%u:%u %d\n",
+	currentTime.wYear,currentTime.wMonth,currentTime.wDay,
+	currentTime.wHour,currentTime.wMinute,currentTime.wSecond,
+	currentTime.wMilliseconds,currentTime.wDayOfWeek);
+
+	initLogger();
+	Log.debug("Hello ÀÏÆÅ% \n");
 	testThreadPoll();
 	return 0;
 }

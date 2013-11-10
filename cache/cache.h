@@ -14,22 +14,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
-
-typedef signed   char                   int8_t;      /**<  8bit integer type */
-typedef signed   short                  int16_t;     /**< 16bit integer type */
-typedef signed   long                   int32_t;     /**< 32bit integer type */
-typedef unsigned char                   uint8_t;     /**<  8bit unsigned integer type */
-typedef unsigned short                  uint16_t;    /**< 16bit unsigned integer type */
-typedef unsigned long                   uint32_t;    /**< 32bit unsigned integer type */
-typedef int                             bool_t;      /**< boolean type */
-
-#ifndef TRUE
-#define TRUE            1
-#endif
-
-#ifndef FALSE
-#define FALSE           0
-#endif
+#include "log.h"
 
 #define CACHE_NAME_MAX     20       /**< CacheData max name length */
 #define CACHE_LENGTH_MAX   64       /**< value max length */
@@ -64,8 +49,10 @@ typedef struct _Cache {
 	CacheErrCode (*add)(struct _Cache* const cache, char* name, uint8_t length,
 			uint8_t level, uint16_t* value, void (*valueChangedListener)(void));
 	CacheErrCode (*remove)(struct _Cache* const cache, const char* name);
-	CacheErrCode (*put)(struct _Cache* const cache, const char* name, uint16_t* value);
-	CacheErrCode (*get)(struct _Cache* const cache, const char* name, uint16_t* value);
+	CacheErrCode (*put)(struct _Cache* const cache, const char* name,
+			uint16_t* value);
+	CacheErrCode (*get)(struct _Cache* const cache, const char* name,
+			uint16_t* value);
 	CacheErrCode (*getSize)(struct _Cache* const cache, uint16_t* length,
 			uint32_t* size);
 	char name[CACHE_NAME_MAX]; /**< the name of CacheData */

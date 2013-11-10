@@ -29,7 +29,7 @@ CacheErrCode initCache(pCache const cache, const char* name) {
 	CacheErrCode errorCode = CACHE_NO_ERR;
 
 	if ((name == NULL) || (strlen(name) > CACHE_NAME_MAX)) {
-		printf("the name of %s can not be creat for list\n", name);
+		Log.debug("the name of %s can not be creat for list\n", name);
 		errorCode = CACHE_NAME_ERROR;
 	} else {
 		strcpy(cache->name, name);
@@ -59,7 +59,7 @@ pCacheData findData(pCache const cache, const char* name) {
 	assert((name != NULL) && (strlen(name) <= CACHE_NAME_MAX));
 	//this cache is null
 	if (cache->dataHead == NULL) {
-		printf("the %s's data list is NULL,find data fail\n",cache->name);
+		Log.debug("the %s's data list is NULL,find data fail\n",cache->name);
 		return NULL;
 	}
 	/* search the data from list*/
@@ -68,7 +68,7 @@ pCacheData findData(pCache const cache, const char* name) {
 			return data;
 		} else {
 			if (data->next == NULL) {/* list tail */
-				printf("could not find %s\n", name);
+				Log.debug("could not find %s\n", name);
 				break;
 			}
 			data = data->next;
@@ -98,7 +98,7 @@ CacheErrCode addData(pCache const cache, char* name, uint8_t length,
 	assert(data != NULL);
 
 	if (findData(cache,name) != NULL) {/* the data must not exist in list */
-		printf("the name of %s data is already exist in cache data list\n", name);
+		Log.debug("the name of %s data is already exist in cache data list\n", name);
 		errorCode = CACHE_NAME_ERROR;
 	} else {
 		strcpy(data->name, name);
@@ -106,7 +106,7 @@ CacheErrCode addData(pCache const cache, char* name, uint8_t length,
 
 	if (errorCode == CACHE_NO_ERR) {
 		if (length > CACHE_LENGTH_MAX) {
-			printf("the name %s is too long,can't add to list\n", name);
+			Log.debug("the name %s is too long,can't add to list\n", name);
 			errorCode = CACHE_LENGTH_ERROR;
 		} else {
 			data->length = length;
@@ -115,7 +115,7 @@ CacheErrCode addData(pCache const cache, char* name, uint8_t length,
 
 	if (errorCode == CACHE_NO_ERR) {
 		if (level > CACHE_LEVEL_MAX) {
-			printf("the level %d is greater than max level\n", level);
+			Log.debug("the level %d is greater than max level\n", level);
 			errorCode = CACHE_LEVEL_ERROR;
 		} else {
 			data->level = level;
@@ -140,7 +140,7 @@ CacheErrCode addData(pCache const cache, char* name, uint8_t length,
 			cache->dataTail->next = data;
 			cache->dataTail = data;
 		}
-		printf("add %s to data list is success\n", name);
+		Log.debug("add %s to data list is success\n", name);
 	} else if (errorCode != CACHE_NO_ERR) {
 		free(data);
 		data = NULL;
@@ -163,7 +163,7 @@ CacheErrCode removeData(pCache const cache, const char* name) {
 	assert((name != NULL) && (strlen(name) <= CACHE_NAME_MAX));
 	/* check cache initialize */
 	if (cache->dataHead == NULL) {
-		printf("the %s's data list is NULL,remove data fail\n",cache->name);
+		Log.debug("the %s's data list is NULL,remove data fail\n",cache->name);
 		errorCode = CACHE_NO_VALUE;
 	}
 	/* search the data from list*/
@@ -171,7 +171,7 @@ CacheErrCode removeData(pCache const cache, const char* name) {
 		if (strcmp(data->name, name)) { /* list head  */
 			for (;;) {
 				if (data->next == NULL) {/* list tail */
-					printf("could not find %s\n", name);
+					Log.debug("could not find %s\n", name);
 					errorCode = CACHE_NAME_ERROR;
 					break;
 				} else {
@@ -207,7 +207,7 @@ CacheErrCode removeData(pCache const cache, const char* name) {
 		dataTemp->value = NULL;
 		free(dataTemp);
 		dataTemp = NULL;
-		printf("remove %s data node is success\n", name);
+		Log.debug("remove %s data node is success\n", name);
 	}
 	return errorCode;
 }
@@ -234,7 +234,7 @@ CacheErrCode getValue(pCache const cache, const char* name, uint16_t* value) {
 	if (errorCode == CACHE_NO_ERR) {
 		dataValue = data->value;
 		for (i = 0; i < data->length; i++) {
-			printf("get %s value%d is %d \n", data->name, i, *(dataValue));
+			Log.debug("get %s value%d is %d \n", data->name, i, *(dataValue));
 			*(value++) = *(dataValue++);
 		}
 	}
@@ -262,7 +262,7 @@ CacheErrCode putValue(pCache const cache, const char* name, uint16_t* value) {
 	} else { /* put the value */
 		dataValue = data->value;
 		for (i = 0; i < data->length; i++) {
-			printf("put %s value%d is %d \n", data->name, i, *(value));
+			Log.debug("put %s value%d is %d \n", data->name, i, *(value));
 			*(dataValue++) = *(value++);
 		}
 	}
@@ -284,7 +284,7 @@ CacheErrCode getSize(pCache const cache, uint16_t* length, uint32_t* size) {
 	*size = 0;
 	for (;;) {
 		if (data == NULL) {
-			printf("the %s's length is %d,size is %ld\n", cache->name, *length,
+			Log.debug("the %s's length is %d,size is %ld\n", cache->name, *length,
 					*size);
 			break;
 		} else {

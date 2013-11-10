@@ -20,7 +20,7 @@ static void* threadJob(void* arg);
  *
  * @return error code
  */
-ThreadPoolErrCode init(pThreadPool const pool, uint8_t maxThreadNum) {
+ThreadPoolErrCode initThreadPool(pThreadPool const pool, uint8_t maxThreadNum) {
 	ThreadPoolErrCode errorCode = THREAD_POOL_NO_ERR;
 	uint8_t i = 0;
 
@@ -39,9 +39,9 @@ ThreadPoolErrCode init(pThreadPool const pool, uint8_t maxThreadNum) {
 		pool->threadID = (pthread_t *) malloc(maxThreadNum * sizeof(pthread_t));
 		for (i = 0; i < maxThreadNum; i++) {
 			pthread_create(&(pool->threadID[i]), NULL, threadJob, pool);
-			printf("creat thread %#x in thread pool success.Current total thread number is %d%d\n",pool->threadID[i],i);
+			Log.debug("create thread %#x in thread pool success.Current total thread number is %d\n",pool->threadID[i],i);
 		}
-		printf("initialize thread poll success!\n");
+		Log.debug("initialize thread poll success!\n");
 	}
 	return errorCode;
 }
@@ -81,7 +81,7 @@ ThreadPoolErrCode addTask(pThreadPool const pool, void *(*process)(void *arg),
 	pthread_mutex_unlock(&(pool->queueLock));
 	/* wake up a waiting thread to process task */
 	pthread_cond_signal(&(pool->queueReady));
-	printf("add a task to taskQueue success.Current task total number is %d\n",pool->curWaitThreadNum);
+	Log.debug("add a task to taskQueue success.Current task total number is %d\n",pool->curWaitThreadNum);
 	return errorCode;
 }
 
@@ -105,7 +105,7 @@ ThreadPoolErrCode destroy(pThreadPool pool) {
 		pthread_cond_broadcast(&(pool->queueReady));
 		/* wait all thread exit */
 		for (i = 0; i < pool->maxThreadNum; i++) {
-			printf("Thread pool will destroy,Waiting the thread %#x exit\n",pool->threadID[i]);
+			Log.debug("Thread pool will destroy,Waiting the thread %#x exit\n",pool->threadID[i]);
 			pthread_join(pool->threadID[i], NULL);
 		}
 		/* release memory */
@@ -123,7 +123,7 @@ ThreadPoolErrCode destroy(pThreadPool pool) {
 		/* release memory */
 		free(pool);
 		pool = NULL;
-		printf("Thread pool destroy success\n");
+		Log.debug("Thread pool destroy success\n");
 	}
 	return errorCode;
 }
@@ -144,10 +144,11 @@ void* threadJob(void* arg) {
 		pthread_mutex_lock(&(pool->queueLock));
 		/* If waiting thread number is 0 ,and thread is not shutdown.
 		 * The thread will block.
-		 * Before thread bolck the queueLock will unlock.
+		 * Before thread block the queueLock will unlock.
 		 * After thread wake up ,the queueLock will relock.*/
 		while (pool->curWaitThreadNum == 0 && !pool->isShutdown) {
-			printf("the thread %#x waiting for task add to taskQueue\n",pthread_self());
+			Log.debug("the thread %#x waiting for task add to taskQueue\n",
+					pthread_self());
 			pthread_cond_wait(&(pool->queueReady), &(pool->queueLock));
 		}
 		if (pool->isShutdown) { /* thread pool will shutdown */
