@@ -12,14 +12,14 @@
 void *valueChangedListener1(void *arg) {
 	pCacheData data = (pCacheData)arg;
 	Log.d("this is valueChangedListener1,the data %s was changed", data->name);
-	sleep(5);
+	sleep(1);
 	return NULL;
 }
 
 void *valueChangedListener2(void *arg) {
 	pCacheData data = (pCacheData)arg;
 	Log.d("this is valueChangedListener2,the data %s was changed", data->name);
-	sleep(5);
+	sleep(1);
 	return NULL;
 }
 
@@ -42,12 +42,12 @@ void testCache(void){
 	cache.get(&cache,"湿度",valueTemp);
 	cache.get(&cache,"PM2.5",valueTemp);
 	cache.remove(&cache,"温度");
-//	cache.remove(&cache,"压力");
-//	cache.remove(&cache,"湿度");
-//	cache.remove(&cache,"PM2.5");
-//	cache.remove(&cache,"PM2.5");
+	cache.remove(&cache,"压力");
+	cache.remove(&cache,"湿度");
+	cache.remove(&cache,"PM2.5");
+	cache.remove(&cache,"PM2.5");
 	cache.get(&cache,"PM2.5",valueTemp);
-//	cache.add(&cache,"PM2.5",4,4,valueTemp,valueChangedListener);
+	cache.add(&cache,"PM2.5",4,4,valueTemp,valueChangedListener1);
 	cache.get(&cache,"PM2.5",valueTemp);
 	cache.getSize(&cache,&cacheLength,&cacheSize);
 	valueTemp[0] = 3;
@@ -56,12 +56,12 @@ void testCache(void){
 	valueTemp[3] = 0;
 	cache.put(&cache,"温度",valueTemp);
 	cache.put(&cache,"压力",valueTemp);
-	cache.get(&cache,"PM2.5",valueTemp);
-	cache.remove(&cache,"PM2.5");
+	cache.put(&cache,"PM2.5",valueTemp);
+//	cache.remove(&cache,"PM2.5");
 	cache.get(&cache,"PM2.5",valueTemp);
 	cache.getSize(&cache,&cacheLength,&cacheSize);
 
-	sleep(10);
+	sleep(5);
 	cache.pool->destroy(cache.pool);
 }
 

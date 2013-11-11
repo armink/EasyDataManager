@@ -101,6 +101,8 @@ CacheErrCode addData(pCache const cache, char* name, uint8_t length,
 		void* (*valueChangedListener)(void *arg)) {
 	CacheErrCode errorCode = CACHE_NO_ERR;
 	pCacheData data;
+	/* lock the thread pool synchronized lock */
+	cache->pool->lock(cache->pool);
 
 	data = (pCacheData) malloc(sizeof(CacheData));
 	assert(data != NULL);
@@ -137,8 +139,6 @@ CacheErrCode addData(pCache const cache, char* name, uint8_t length,
 		memcpy(data->value, value, length * sizeof(uint16_t));
 		data->valueChangedListener = valueChangedListener;
 		data->next = NULL;
-		/* lock the thread pool synchronized lock */
-		cache->pool->lock(cache->pool);
 		/* if list is NULL ,then head node is equal of tail node*/
 		if (cache->dataHead == NULL) {
 			cache->dataHead = cache->dataTail = data;
@@ -150,13 +150,13 @@ CacheErrCode addData(pCache const cache, char* name, uint8_t length,
 			cache->dataTail->next = data;
 			cache->dataTail = data;
 		}
-		/* unlock the thread pool synchronized lock */
-		cache->pool->unlock(cache->pool);
 		Log.d("add %s to data list is success", name);
 	} else if (errorCode != CACHE_NO_ERR) {
 		free(data);
 		data = NULL;
 	}
+	/* unlock the thread pool synchronized lock */
+	cache->pool->unlock(cache->pool);
 	return errorCode;
 }
 
@@ -171,11 +171,13 @@ CacheErrCode addData(pCache const cache, char* name, uint8_t length,
 CacheErrCode removeData(pCache const cache, const char* name) {
 	CacheErrCode errorCode = CACHE_NO_ERR;
 	pCacheData data = cache->dataHead, dataTemp;
+	/* lock the thread pool synchronized lock */
+	cache->pool->lock(cache->pool);
 
 	assert((name != NULL) && (strlen(name) <= CACHE_NAME_MAX));
 	/* check cache initialize */
 	if (cache->dataHead == NULL) {
-		Log.d("the %s's data list is NULL,remove data fail",cache->name);
+		Log.d("the %s's data list is NULL,remove data fail", cache->name);
 		errorCode = CACHE_NO_VALUE;
 	}
 	/* search the data from list*/
@@ -197,8 +199,6 @@ CacheErrCode removeData(pCache const cache, const char* name) {
 		}
 	}
 	if (errorCode == CACHE_NO_ERR) {
-		/* lock the thread pool synchronized lock */
-		cache->pool->lock(cache->pool);
 		/* delete data is head node */
 		if (data == cache->dataHead) {
 			/* the list has one node */
@@ -217,14 +217,15 @@ CacheErrCode removeData(pCache const cache, const char* name) {
 			data->next = data->next->next;
 			data = dataTemp; /* data will be freed in the end */
 		}
-		free(dataTemp->value);
-		dataTemp->value = NULL;
-		free(dataTemp);
+		free(data->value);
+		data->value = NULL;
+		free(data);
+		data = NULL;
 		dataTemp = NULL;
-		/* unlock the thread pool synchronized lock */
-		cache->pool->unlock(cache->pool);
 		Log.d("remove %s data node is success", name);
 	}
+	/* unlock the thread pool synchronized lock */
+	cache->pool->unlock(cache->pool);
 	return errorCode;
 }
 
@@ -270,8 +271,9 @@ CacheErrCode getValue(pCache const cache, const char* name, uint16_t* value) {
 CacheErrCode putValue(pCache const cache, const char* name, uint16_t* value) {
 	CacheErrCode errorCode = CACHE_NO_ERR;
 	pCacheData data = cache->dataHead;
-	uint8_t i, isValueChange = FALSE;
+	uint8_t i, isValueChanged = FALSE;
 	uint16_t* dataValue;
+
 	/* the data must exist in list */
 	if ((data = findData(cache, name)) == NULL) {
 		errorCode = CACHE_NAME_ERROR;
@@ -280,13 +282,13 @@ CacheErrCode putValue(pCache const cache, const char* name, uint16_t* value) {
 		for (i = 0; i < data->length; i++) {
 			Log.d("put %s value%d is %d", data->name, i, *(value));
 			if (*(dataValue) != *(value)) {
-				isValueChange = TRUE;
+				isValueChanged = TRUE;
 			}
 			*(dataValue++) = *(value++);
 		}
 	}
 	/* If value was changed.Execution valueChangedListener */
-	if ((isValueChange) && (data->valueChangedListener != NULL)) {
+	if ((isValueChanged) && (data->valueChangedListener != NULL)) {
 		cache->pool->addTask(cache->pool, data->valueChangedListener, data);
 	}
 	return errorCode;

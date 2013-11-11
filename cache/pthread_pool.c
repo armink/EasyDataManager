@@ -44,7 +44,8 @@ ThreadPoolErrCode initThreadPool(pThreadPool const pool, uint8_t maxThreadNum) {
 		pool->threadID = (pthread_t *) malloc(maxThreadNum * sizeof(pthread_t));
 		for (i = 0; i < maxThreadNum; i++) {
 			pthread_create(&(pool->threadID[i]), NULL, threadJob, pool);
-			Log.d("create thread success.Current total thread number is %d",i);
+			Log.d("create thread success.Current total thread number is %d",
+					i + 1);
 		}
 		Log.d("initialize thread pool success!");
 	}
@@ -86,7 +87,7 @@ ThreadPoolErrCode addTask(pThreadPool const pool, void *(*process)(void *arg),
 	pthread_mutex_unlock(&(pool->queueLock));
 	/* wake up a waiting thread to process task */
 	pthread_cond_signal(&(pool->queueReady));
-	Log.d("add a task to task queue success.Current task total number is %d",pool->curWaitThreadNum);
+	Log.d("add a task to task queue success.");
 	return errorCode;
 }
 
@@ -185,7 +186,7 @@ void* threadJob(void* arg) {
  *
  */
 void syncLock(pThreadPool pool) {
-	Log.d("is syncLock");
+//	Log.d("is syncLock");
 	pthread_mutex_lock(&(pool->userLock));
 }
 
@@ -196,6 +197,6 @@ void syncLock(pThreadPool pool) {
  *
  */
 void syncUnlock(pThreadPool pool) {
-	Log.d("is syncUnlock");
+//	Log.d("is syncUnlock");
 	pthread_mutex_unlock(&(pool->userLock));
 }
