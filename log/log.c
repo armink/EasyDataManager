@@ -8,7 +8,7 @@
 #include "log.h"
 
 static pthread_mutex_t printLock;
-static uint8_t isOpenLog = FALSE;
+static uint8_t isOpenPrint = FALSE;
 static uint8_t isInitLog = FALSE;
 
 static void debug(const char* format, ...);
@@ -19,9 +19,11 @@ static void printThreadID(void);
  * This function will initialize logger.
  *
  */
-void initLogger(void) {
-	isOpenLog = TRUE;
-	pthread_mutex_init(&printLock, NULL);
+void initLogger(uint8_t isOpen) {
+	isOpenPrint = isOpen;
+	if (isOpen) {
+		pthread_mutex_init(&printLock, NULL);
+	}
 	isInitLog = TRUE;
 	Log.d = debug;
 }
@@ -35,11 +37,7 @@ void initLogger(void) {
  */
 void debug(const char* format, ...) {
 	va_list args;
-	if (!isInitLog) {
-		printf("Logger is not initialize");
-		return;
-	}
-	if (!isOpenLog) {
+	if (!isOpenPrint || !isInitLog) {
 		return;
 	}
 	/* args point to the first variable parameter */
@@ -60,7 +58,7 @@ void debug(const char* format, ...) {
  *
  */
 void destroyLogger(void) {
-	isOpenLog = FALSE;
+	isOpenPrint = FALSE;
 	isInitLog = FALSE;
 	pthread_mutex_destroy(&printLock);
 }

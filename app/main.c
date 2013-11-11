@@ -78,7 +78,7 @@ int main()
 {
 	/* ¹Ø±Õprintf»º³åÊä³ö */
 	setbuf(stdout, NULL);
-	initLogger();
+	initLogger(TRUE);
 	testCache();
 //	testThreadPoll();
 	return 0;

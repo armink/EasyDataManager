@@ -21,7 +21,7 @@
 
 #endif
 
-void initLogger(void);
+void initLogger(uint8_t isOpen);
 void destroyLogger(void);
 
 typedef struct {
