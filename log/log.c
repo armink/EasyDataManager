@@ -58,9 +58,11 @@ void debug(const char* format, ...) {
  *
  */
 void destroyLogger(void) {
+	if (isOpenPrint) {
+		pthread_mutex_destroy(&printLock);
+	}
 	isOpenPrint = FALSE;
 	isInitLog = FALSE;
-	pthread_mutex_destroy(&printLock);
 }
 
 /**

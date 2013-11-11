@@ -9,9 +9,16 @@
 #include "log.h"
 #include <stdio.h>
 
-void *valueChangedListener(void *arg) {
+void *valueChangedListener1(void *arg) {
 	pCacheData data = (pCacheData)arg;
-	Log.d("this data %s was changed", data->name);
+	Log.d("this is valueChangedListener1,the data %s was changed", data->name);
+	sleep(5);
+	return NULL;
+}
+
+void *valueChangedListener2(void *arg) {
+	pCacheData data = (pCacheData)arg;
+	Log.d("this is valueChangedListener2,the data %s was changed", data->name);
 	sleep(5);
 	return NULL;
 }
@@ -25,10 +32,10 @@ void testCache(void){
 	valueTemp[1] = 1;
 	valueTemp[2] = 2;
 	valueTemp[3] = 3;
-	cache.add(&cache,"温度",1,1,valueTemp,valueChangedListener);
-	cache.add(&cache,"压力",2,2,valueTemp,valueChangedListener);
-	cache.add(&cache,"湿度",3,3,valueTemp,valueChangedListener);
-	cache.add(&cache,"PM2.5",4,4,valueTemp,valueChangedListener);
+	cache.add(&cache,"温度",1,1,valueTemp,valueChangedListener1);
+	cache.add(&cache,"压力",2,2,valueTemp,valueChangedListener2);
+	cache.add(&cache,"湿度",3,3,valueTemp,NULL);
+	cache.add(&cache,"PM2.5",4,4,valueTemp,NULL);
 	cache.getSize(&cache,&cacheLength,&cacheSize);
 	cache.get(&cache,"温度",valueTemp);
 	cache.get(&cache,"压力",valueTemp);
@@ -47,7 +54,8 @@ void testCache(void){
 	valueTemp[1] = 2;
 	valueTemp[2] = 1;
 	valueTemp[3] = 0;
-	cache.put(&cache,"PM2.5",valueTemp);
+	cache.put(&cache,"温度",valueTemp);
+	cache.put(&cache,"压力",valueTemp);
 	cache.get(&cache,"PM2.5",valueTemp);
 	cache.remove(&cache,"PM2.5");
 	cache.get(&cache,"PM2.5",valueTemp);
@@ -81,5 +89,6 @@ int main()
 	initLogger(TRUE);
 	testCache();
 //	testThreadPoll();
+	destroyLogger();
 	return 0;
 }
