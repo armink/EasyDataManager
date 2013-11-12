@@ -7,14 +7,14 @@
  */
 #include "cache.h"
 
-static pCacheData findData(pCache const cache, const char* name);
+static pCacheData hasData(pCache const cache, const char* name);
 static CacheErrCode addData(pCache const cache, char* name, uint8_t length,
 		uint8_t level, uint16_t* value,
 		void* (*valueChangedListener)(void *arg));
-static CacheErrCode removeData(pCache const cache, const char* name);
+static CacheErrCode delData(pCache const cache, const char* name);
 static CacheErrCode getValue(pCache const cache, const char* name,
 		uint16_t* value);
-static CacheErrCode putValue(pCache const cache, const char* name,
+static CacheErrCode setValue(pCache const cache, const char* name,
 		uint16_t* value);
 static CacheErrCode getSize(pCache const cache, uint16_t* length,
 		uint32_t* size);
@@ -38,11 +38,11 @@ CacheErrCode initCache(pCache const cache, const char* name,
 	} else {
 		strcpy(cache->name, name);
 	}
-	cache->find = findData;
+	cache->has = hasData;
 	cache->add = addData;
-	cache->remove = removeData;
+	cache->del = delData;
 	cache->get = getValue;
-	cache->put = putValue;
+	cache->set = setValue;
 	cache->getSize = getSize;
 	cache->dataHead = NULL;
 	cache->dataTail = NULL;
@@ -60,7 +60,7 @@ CacheErrCode initCache(pCache const cache, const char* name,
  *
  * @return the CacheData point which has found,If not found will return NULL.
  */
-pCacheData findData(pCache const cache, const char* name) {
+pCacheData hasData(pCache const cache, const char* name) {
 	pCacheData data = cache->dataHead;
 
 	assert((name != NULL) && (strlen(name) <= CACHE_NAME_MAX));
@@ -107,7 +107,7 @@ CacheErrCode addData(pCache const cache, char* name, uint8_t length,
 	data = (pCacheData) malloc(sizeof(CacheData));
 	assert(data != NULL);
 
-	if (findData(cache,name) != NULL) {/* the data must not exist in list */
+	if (hasData(cache,name) != NULL) {/* the data must not exist in list */
 		Log.d("the name of %s data is already exist in cache data list", name);
 		errorCode = CACHE_NAME_ERROR;
 	} else {
@@ -161,14 +161,14 @@ CacheErrCode addData(pCache const cache, char* name, uint8_t length,
 }
 
 /**
- * This function will remove the data from CacheData list.
+ * This function will delete the data from CacheData list.
  *
  * @param cache the cache pointer
  * @param name the cache data name
  *
  * @return error code
  */
-CacheErrCode removeData(pCache const cache, const char* name) {
+CacheErrCode delData(pCache const cache, const char* name) {
 	CacheErrCode errorCode = CACHE_NO_ERR;
 	pCacheData data = cache->dataHead, dataTemp;
 	/* lock the thread pool synchronized lock */
@@ -177,7 +177,7 @@ CacheErrCode removeData(pCache const cache, const char* name) {
 	assert((name != NULL) && (strlen(name) <= CACHE_NAME_MAX));
 	/* check cache initialize */
 	if (cache->dataHead == NULL) {
-		Log.d("the %s's data list is NULL,remove data fail", cache->name);
+		Log.d("the %s's data list is NULL,delete data fail", cache->name);
 		errorCode = CACHE_NO_VALUE;
 	}
 	/* search the data from list*/
@@ -222,7 +222,7 @@ CacheErrCode removeData(pCache const cache, const char* name) {
 		free(data);
 		data = NULL;
 		dataTemp = NULL;
-		Log.d("remove %s data node is success", name);
+		Log.d("delete %s data node is success", name);
 	}
 	/* unlock the thread pool synchronized lock */
 	cache->pool->unlock(cache->pool);
@@ -244,7 +244,7 @@ CacheErrCode getValue(pCache const cache, const char* name, uint16_t* value) {
 	uint8_t i;
 	uint16_t* dataValue;
 	/* the data must exist in list */
-	if ((data = findData(cache, name)) == NULL) {
+	if ((data = hasData(cache, name)) == NULL) {
 		errorCode = CACHE_NAME_ERROR;
 	}
 	/* return the value */
@@ -260,27 +260,26 @@ CacheErrCode getValue(pCache const cache, const char* name, uint16_t* value) {
 }
 
 /**
- * This function will put the value to CacheData list.
+ * This function will set the value in CacheData list.
  *
  * @param cache the cache pointer
  * @param name the cache data name
- * @param value the value which will put
+ * @param value the value which will set
  *
  * @return error code
  */
-CacheErrCode putValue(pCache const cache, const char* name, uint16_t* value) {
+CacheErrCode setValue(pCache const cache, const char* name, uint16_t* value) {
 	CacheErrCode errorCode = CACHE_NO_ERR;
 	pCacheData data = cache->dataHead;
 	uint8_t i, isValueChanged = FALSE;
 	uint16_t* dataValue;
-
 	/* the data must exist in list */
-	if ((data = findData(cache, name)) == NULL) {
+	if ((data = hasData(cache, name)) == NULL) {
 		errorCode = CACHE_NAME_ERROR;
-	} else { /* put the value */
+	} else { /* set the value */
 		dataValue = data->value;
 		for (i = 0; i < data->length; i++) {
-			Log.d("put %s value%d is %d", data->name, i, *(value));
+			Log.d("set %s value%d is %d", data->name, i, *(value));
 			if (*(dataValue) != *(value)) {
 				isValueChanged = TRUE;
 			}

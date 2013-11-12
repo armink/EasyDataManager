@@ -46,12 +46,12 @@ typedef struct _CacheData{
 
 /* Cache supply functions set and CacheData list for app */
 typedef struct _Cache {
-	pCacheData (*find)(struct _Cache* const cache, const char* name);
+	pCacheData (*has)(struct _Cache* const cache, const char* name);
 	CacheErrCode (*add)(struct _Cache* const cache, char* name, uint8_t length,
 			uint8_t level, uint16_t* value,
 			void* (*valueChangedListener)(void *arg));
-	CacheErrCode (*remove)(struct _Cache* const cache, const char* name);
-	CacheErrCode (*put)(struct _Cache* const cache, const char* name,
+	CacheErrCode (*del)(struct _Cache* const cache, const char* name);
+	CacheErrCode (*set)(struct _Cache* const cache, const char* name,
 			uint16_t* value);
 	CacheErrCode (*get)(struct _Cache* const cache, const char* name,
 			uint16_t* value);
