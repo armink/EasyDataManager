@@ -1,9 +1,11 @@
 /*
- * cahce.h
+ * This file is part of the EasyDataManager Library.
  *
- *  Created on: 2013-10-31
- *      Author: Armink
- *  Note:Cache > CacheData=Data > Value in logic
+ * Copyright (C) 2013 by Armink <armink.ztl@gmail.com>
+ *
+ * Function: process and manage the cache data
+ * Created on: 2013-10-31
+ * Note: Cache > CacheData=Data > Value     in logic
  */
 
 #ifndef CACHE_H_

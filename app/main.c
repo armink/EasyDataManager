@@ -1,9 +1,12 @@
 /*
- * main.c
+ * This file is part of the EasyDataManager Library.
  *
- *  Created on: 2013-10-30
- *      Author: Armink
+ * Copyright (C) 2013 by Armink <armink.ztl@gmail.com>
+ *
+ * Function: test the library
+ * Created on: 2013-10-30
  */
+
 #include "cache.h"
 #include "pthread_pool.h"
 #include "log.h"

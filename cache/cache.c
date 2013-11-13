@@ -1,10 +1,13 @@
 /*
- *  cache.c
- *  process and manage the cache data
- *  Created on: 2013-10-31
- *      Author: Armink
- *  Note:Cache > CacheData=Data > Value     in logic
+ * This file is part of the EasyDataManager Library.
+ *
+ * Copyright (C) 2013 by Armink <armink.ztl@gmail.com>
+ *
+ * Function: process and manage the cache data
+ * Created on: 2013-10-31
+ * Note: Cache > CacheData=Data > Value     in logic
  */
+
 #include "cache.h"
 
 static pCacheData hasData(pCache const cache, const char* name);

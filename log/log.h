@@ -1,8 +1,10 @@
 /*
- * log.h
+ * This file is part of the EasyDataManager Library.
  *
- *  Created on: 2013Äê11ÔÂ10ÈÕ
- *      Author: Armink
+ * Copyright (C) 2013 by Armink <armink.ztl@gmail.com>
+ *
+ * Function: a logger in this library
+ * Created on: 2013-11-10
  */
 
 #ifndef LOG_H_

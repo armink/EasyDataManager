@@ -1,8 +1,10 @@
 /*
- * pthread_pool.c
- * a thread pool base as pthread
- *  Created on: 2013-11-7
- *      Author: Armink
+ * This file is part of the EasyDataManager Library.
+ *
+ * Copyright (C) 2013 by Armink <armink.ztl@gmail.com>
+ *
+ * Function: a thread pool base as pthread
+ * Created on: 2013-11-07
  */
 
 #include "pthread_pool.h"
