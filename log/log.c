@@ -41,16 +41,16 @@ void debug(const char* format, ...) {
 		return;
 	}
 	/* args point to the first variable parameter */
-	va_start(args, format);
 	/* lock the print ,make sure the print data full */
 	pthread_mutex_lock(&printLock);
+	va_start(args, format);
 	printTime();
 	printThreadID();
 	/* must use vprintf to print */
 	vprintf(format, args);
 	printf("\n");
-	pthread_mutex_unlock(&printLock);
 	va_end(args);
+	pthread_mutex_unlock(&printLock);
 }
 
 /**
