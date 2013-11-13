@@ -46,10 +46,10 @@ ThreadPoolErrCode initThreadPool(pThreadPool const pool, uint8_t maxThreadNum) {
 		pool->threadID = (pthread_t *) malloc(maxThreadNum * sizeof(pthread_t));
 		for (i = 0; i < maxThreadNum; i++) {
 			pthread_create(&(pool->threadID[i]), NULL, threadJob, pool);
-			Log.d("create thread success.Current total thread number is %d",
+			LogD("create thread success.Current total thread number is %d",
 					i + 1);
 		}
-		Log.d("initialize thread pool success!");
+		LogD("initialize thread pool success!");
 	}
 	return errorCode;
 }
@@ -89,7 +89,7 @@ ThreadPoolErrCode addTask(pThreadPool const pool, void *(*process)(void *arg),
 	pthread_mutex_unlock(&(pool->queueLock));
 	/* wake up a waiting thread to process task */
 	pthread_cond_signal(&(pool->queueReady));
-	Log.d("add a task to task queue success.");
+	LogD("add a task to task queue success.");
 	return errorCode;
 }
 
@@ -113,7 +113,7 @@ ThreadPoolErrCode destroy(pThreadPool pool) {
 		pthread_cond_broadcast(&(pool->queueReady));
 		/* wait all thread exit */
 		for (i = 0; i < pool->maxThreadNum; i++) {
-			Log.d("Thread pool will destroy,waiting the thread exit");
+			LogD("Thread pool will destroy,waiting the thread exit");
 			pthread_join(pool->threadID[i], NULL);
 		}
 		/* release memory */
@@ -132,7 +132,7 @@ ThreadPoolErrCode destroy(pThreadPool pool) {
 		/* release memory */
 		free(pool);
 		pool = NULL;
-		Log.d("Thread pool destroy success");
+		LogD("Thread pool destroy success");
 	}
 	return errorCode;
 }
@@ -155,7 +155,7 @@ void* threadJob(void* arg) {
 		 * Before thread block the queueLock will unlock.
 		 * After thread wake up ,the queueLock will relock.*/
 		while (pool->curWaitThreadNum == 0 && !pool->isShutdown) {
-			Log.d("the thread waiting for task add to task queue",
+			LogD("the thread waiting for task add to task queue",
 					pthread_self());
 			pthread_cond_wait(&(pool->queueReady), &(pool->queueLock));
 		}
@@ -188,7 +188,7 @@ void* threadJob(void* arg) {
  *
  */
 void syncLock(pThreadPool pool) {
-//	Log.d("is syncLock");
+//	LogD("is syncLock");
 	pthread_mutex_lock(&(pool->userLock));
 }
 
@@ -199,6 +199,6 @@ void syncLock(pThreadPool pool) {
  *
  */
 void syncUnlock(pThreadPool pool) {
-//	Log.d("is syncUnlock");
+//	LogD("is syncUnlock");
 	pthread_mutex_unlock(&(pool->userLock));
 }

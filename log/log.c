@@ -13,7 +13,6 @@ static pthread_mutex_t printLock;
 static uint8_t isOpenPrint = FALSE;
 static uint8_t isInitLog = FALSE;
 
-static void debug(const char* format, ...);
 static void printTime(void);
 static void printThreadID(void);
 
@@ -27,32 +26,34 @@ void initLogger(uint8_t isOpen) {
 		pthread_mutex_init(&printLock, NULL);
 	}
 	isInitLog = TRUE;
-	Log.d = debug;
 }
 
 /**
  * This function is print debug info.
  *
+ * @param file the file which has call this function
+ * @param line the line number which has call this function
  * @param format output format
  * @param ... args
  *
  */
-void debug(const char* format, ...) {
+void debug(const char *file, const long line, const char *format, ...) {
 	va_list args;
 	if (!isOpenPrint || !isInitLog) {
 		return;
 	}
+	va_start(args, format);
 	/* args point to the first variable parameter */
 	/* lock the print ,make sure the print data full */
 	pthread_mutex_lock(&printLock);
-	va_start(args, format);
 	printTime();
 	printThreadID();
+	printf("(%s:%ld) ", file, line);
 	/* must use vprintf to print */
 	vprintf(format, args);
 	printf("\n");
-	va_end(args);
 	pthread_mutex_unlock(&printLock);
+	va_end(args);
 }
 
 /**

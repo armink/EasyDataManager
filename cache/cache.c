@@ -36,7 +36,7 @@ CacheErrCode initCache(pCache const cache, const char* name,
 	CacheErrCode errorCode = CACHE_NO_ERR;
 
 	if ((name == NULL) || (strlen(name) > CACHE_NAME_MAX)) {
-		Log.d("the name of %s can not be create for list", name);
+		LogD("the name of %s can not be create for list", name);
 		errorCode = CACHE_NAME_ERROR;
 	} else {
 		strcpy(cache->name, name);
@@ -50,8 +50,8 @@ CacheErrCode initCache(pCache const cache, const char* name,
 	cache->dataHead = NULL;
 	cache->dataTail = NULL;
 	/* initialize the thread pool */
-	cache->pool = (pThreadPool)malloc(sizeof(ThreadPool));
-	initThreadPool(cache->pool,maxThreadNum);
+	cache->pool = (pThreadPool) malloc(sizeof(ThreadPool));
+	initThreadPool(cache->pool, maxThreadNum);
 	return errorCode;
 }
 
@@ -69,7 +69,7 @@ pCacheData hasData(pCache const cache, const char* name) {
 	assert((name != NULL) && (strlen(name) <= CACHE_NAME_MAX));
 	//this cache is null
 	if (cache->dataHead == NULL) {
-		Log.d("the %s's data list is NULL,find data fail",cache->name);
+		LogD("the %s's data list is NULL,find data fail", cache->name);
 		return NULL;
 	}
 	/* search the data from list*/
@@ -78,7 +78,7 @@ pCacheData hasData(pCache const cache, const char* name) {
 			return data;
 		} else {
 			if (data->next == NULL) {/* list tail */
-				Log.d("could not find %s", name);
+				LogD("could not find %s", name);
 				break;
 			}
 			data = data->next;
@@ -110,8 +110,8 @@ CacheErrCode addData(pCache const cache, char* name, uint8_t length,
 	data = (pCacheData) malloc(sizeof(CacheData));
 	assert(data != NULL);
 
-	if (hasData(cache,name) != NULL) {/* the data must not exist in list */
-		Log.d("the name of %s data is already exist in cache data list", name);
+	if (hasData(cache, name) != NULL) {/* the data must not exist in list */
+		LogD("the name of %s data is already exist in cache data list", name);
 		errorCode = CACHE_NAME_ERROR;
 	} else {
 		strcpy(data->name, name);
@@ -119,7 +119,7 @@ CacheErrCode addData(pCache const cache, char* name, uint8_t length,
 
 	if (errorCode == CACHE_NO_ERR) {
 		if (length > CACHE_LENGTH_MAX) {
-			Log.d("the name %s is too long,can't add to list", name);
+			LogD("the name %s is too long,can't add to list", name);
 			errorCode = CACHE_LENGTH_ERROR;
 		} else {
 			data->length = length;
@@ -128,7 +128,7 @@ CacheErrCode addData(pCache const cache, char* name, uint8_t length,
 
 	if (errorCode == CACHE_NO_ERR) {
 		if (level > CACHE_LEVEL_MAX) {
-			Log.d("the level %d is greater than max level", level);
+			LogD("the level %d is greater than max level", level);
 			errorCode = CACHE_LEVEL_ERROR;
 		} else {
 			data->level = level;
@@ -153,7 +153,7 @@ CacheErrCode addData(pCache const cache, char* name, uint8_t length,
 			cache->dataTail->next = data;
 			cache->dataTail = data;
 		}
-		Log.d("add %s to data list is success", name);
+		LogD("add %s to data list is success", name);
 	} else if (errorCode != CACHE_NO_ERR) {
 		free(data);
 		data = NULL;
@@ -180,7 +180,7 @@ CacheErrCode delData(pCache const cache, const char* name) {
 	assert((name != NULL) && (strlen(name) <= CACHE_NAME_MAX));
 	/* check cache initialize */
 	if (cache->dataHead == NULL) {
-		Log.d("the %s's data list is NULL,delete data fail", cache->name);
+		LogD("the %s's data list is NULL,delete data fail", cache->name);
 		errorCode = CACHE_NO_VALUE;
 	}
 	/* search the data from list*/
@@ -188,7 +188,7 @@ CacheErrCode delData(pCache const cache, const char* name) {
 		if (strcmp(data->name, name)) { /* list head  */
 			for (;;) {
 				if (data->next == NULL) {/* list tail */
-					Log.d("could not find %s", name);
+					LogD("could not find %s", name);
 					errorCode = CACHE_NAME_ERROR;
 					break;
 				} else {
@@ -225,7 +225,7 @@ CacheErrCode delData(pCache const cache, const char* name) {
 		free(data);
 		data = NULL;
 		dataTemp = NULL;
-		Log.d("delete %s data node is success", name);
+		LogD("delete %s data node is success", name);
 	}
 	/* unlock the thread pool synchronized lock */
 	cache->pool->unlock(cache->pool);
@@ -254,7 +254,7 @@ CacheErrCode getValue(pCache const cache, const char* name, uint16_t* value) {
 	if (errorCode == CACHE_NO_ERR) {
 		dataValue = data->value;
 		for (i = 0; i < data->length; i++) {
-			Log.d("get %s value%d is %d ", data->name, i, *(dataValue));
+			LogD("get %s value%d is %d ", data->name, i, *(dataValue));
 			*(value++) = *(dataValue++);
 		}
 	}
@@ -282,7 +282,7 @@ CacheErrCode setValue(pCache const cache, const char* name, uint16_t* value) {
 	} else { /* set the value */
 		dataValue = data->value;
 		for (i = 0; i < data->length; i++) {
-			Log.d("set %s value%d is %d", data->name, i, *(value));
+			LogD("set %s value%d is %d", data->name, i, *(value));
 			if (*(dataValue) != *(value)) {
 				isValueChanged = TRUE;
 			}
@@ -311,7 +311,7 @@ CacheErrCode getSize(pCache const cache, uint16_t* length, uint32_t* size) {
 	*size = 0;
 	for (;;) {
 		if (data == NULL) {
-			Log.d("the %s's length is %d,size is %ld", cache->name, *length,
+			LogD("the %s's length is %d,size is %ld", cache->name, *length,
 					*size);
 			break;
 		} else {

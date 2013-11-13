@@ -23,16 +23,10 @@
 
 #endif
 
+#define LogD(...) debug( __FILE__, __LINE__, __VA_ARGS__)
+
 void initLogger(uint8_t isOpen);
 void destroyLogger(void);
-
-typedef struct {
-	void (*d)(const char* format, ...);
-	void (*i)(const char* format, ...);
-	void (*e)(const char* format, ...);
-}Logger;
-
-/* logger object */
-Logger Log;
+void debug(const char *file, const long line, const char *format, ...);
 
 #endif /* LOG_H_ */

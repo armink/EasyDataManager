@@ -14,14 +14,14 @@
 
 void *valueChangedListener1(void *arg) {
 	pCacheData data = (pCacheData)arg;
-	Log.d("this is valueChangedListener1,the data %s was changed", data->name);
+	LogD("this is valueChangedListener1,the data %s was changed", data->name);
 	sleep(1);
 	return NULL;
 }
 
 void *valueChangedListener2(void *arg) {
 	pCacheData data = (pCacheData)arg;
-	Log.d("this is valueChangedListener2,the data %s was changed", data->name);
+	LogD("this is valueChangedListener2,the data %s was changed", data->name);
 	sleep(1);
 	return NULL;
 }
@@ -69,7 +69,7 @@ void testCache(void){
 }
 
 void *testProcess(void *arg) {
-	Log.d("this thread arg is %d", *(uint8_t *) arg);
+	LogD("this thread arg is %d", *(uint8_t *) arg);
 	sleep(5);
 	return NULL;
 }
@@ -90,7 +90,10 @@ int main()
 	/* ¹Ø±Õprintf»º³åÊä³ö */
 	setbuf(stdout, NULL);
 	initLogger(TRUE);
-	testCache();
+	while (1) {
+		testCache();
+		sleep(1);
+	}
 //	testThreadPoll();
 	destroyLogger();
 	return 0;
