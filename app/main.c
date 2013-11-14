@@ -90,10 +90,10 @@ int main()
 	/* ¹Ø±Õprintf»º³åÊä³ö */
 	setbuf(stdout, NULL);
 	initLogger(TRUE);
-	while (1) {
+//	while (1) {
 		testCache();
-		sleep(1);
-	}
+//		sleep(1);
+//	}
 //	testThreadPoll();
 	destroyLogger();
 	return 0;
