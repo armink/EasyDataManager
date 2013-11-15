@@ -9,6 +9,8 @@
 
 #include "pthread_pool.h"
 
+#ifdef EDM_USING_PTHREAD
+
 static ThreadPoolErrCode addTask(pThreadPool const pool,
 		void *(*process)(void *arg), void *arg);
 static ThreadPoolErrCode destroy(pThreadPool pool);
@@ -202,3 +204,5 @@ void syncUnlock(pThreadPool pool) {
 //	LogD("is syncUnlock");
 	pthread_mutex_unlock(&(pool->userLock));
 }
+
+#endif

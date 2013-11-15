@@ -37,12 +37,13 @@
 								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.mingw.exe.debug.option.optimization.level.438411595" name="Optimization Level" superClass="gnu.c.compiler.mingw.exe.debug.option.optimization.level" valueType="enumerated"/>
 								<option id="gnu.c.compiler.mingw.exe.debug.option.debugging.level.705963145" name="Debug Level" superClass="gnu.c.compiler.mingw.exe.debug.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.include.paths.464226017" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/EasyDataManager/thread_pool/rt-thread/drivers}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/EasyDataManager/thread_pool/rt-thread/inc}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/EasyDataManager/thread_pool/rt-thread}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/EasyDataManager/thread_pool/pthread}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/EasyDataManager/log}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/EasyDataManager/app/inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/EasyDataManager/cache}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/EasyDataManager/logger}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/EasyDataManager/thread_pool/pthread}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/EasyDataManager/thread_pool/rt-thread}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/EasyDataManager/thread_pool/rt-thread/inc}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/EasyDataManager/thread_pool/rt-thread/drivers}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.331462285" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
@@ -60,11 +61,11 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="log|inc|drivers|rt-thread|app|thread_pool|cache|pthread|posix|src" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
-						<entry excluding="main.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="app"/>
+						<entry excluding="inc|drivers|rt-thread|app|thread_pool|cache|pthread|posix|ucos|src|logger" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="src/main.c|main.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="app"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="cache"/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="log"/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="thread_pool"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="logger"/>
+						<entry excluding="ucos" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="thread_pool"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -109,13 +110,13 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="posix|log|inc|drivers|rt-thread|app|thread_pool|cache|pthread|src" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
-						<entry excluding="main.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="app"/>
+						<entry excluding="drivers|inc|rt-thread|app|thread_pool|cache|pthread|posix|ucos|src|logger" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="src/main.c|main.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="app"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="cache"/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="log"/>
-						<entry excluding="drivers|rt-thread|pthread" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="thread_pool"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="logger"/>
+						<entry excluding="drivers|rt-thread|pthread|ucos" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="thread_pool"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="thread_pool/pthread"/>
-						<entry excluding="libcpu/posix|inc|drivers|src" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="thread_pool/rt-thread"/>
+						<entry excluding="drivers|inc|src|libcpu/posix" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="thread_pool/rt-thread"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="thread_pool/rt-thread/drivers"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="thread_pool/rt-thread/inc"/>
 						<entry excluding="inc" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="thread_pool/rt-thread/src"/>

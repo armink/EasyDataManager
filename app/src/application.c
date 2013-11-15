@@ -12,9 +12,11 @@
  * 2009-01-05     Bernard      the first version
  */
 
+#include <rthw.h>
 #include <rtthread.h>
 #include <stdio.h>
 #include <board.h>
+#include "log.h"
 extern int  rt_application_init(void);
 
 extern rt_uint8_t *heap;
@@ -74,8 +76,9 @@ void rtthread_startup(void)
 //±¸    ×¢£ºEditor£ºArmink   2013-08-02   Company: BXXJS
 //******************************************************************
 void thread_entry_SysMonitor(void* parameter) {
+	initLogger(TRUE);
 	while (1) {
-		printf("hello, world2\n");
+		LogD("hello, world2");
 		rt_thread_delay(1000);
 	}
 }
@@ -93,7 +96,7 @@ int rt_application_init() {
 
 int main(void)
 {
-	/* ¹Ø±Õprintf»º³åÊä³ö */
+	/* close printf buffer */
 	setbuf(stdout, NULL);
 
     /* disable interrupt first */

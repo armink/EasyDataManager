@@ -17,7 +17,13 @@
 #include <assert.h>
 #include <string.h>
 #include "log.h"
+#include "edm_config.h"
+
+#if defined(EDM_USING_PTHREAD)
 #include "pthread_pool.h"
+#elif defined(EDM_USING_RTT)
+#include "rtthread_pool.h"
+#endif
 
 #define CACHE_NAME_MAX     20       /**< CacheData max name length */
 #define CACHE_LENGTH_MAX   64       /**< value max length */

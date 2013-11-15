@@ -16,6 +16,9 @@
 #include <pthread.h>
 #include <assert.h>
 #include "log.h"
+#include "edm_config.h"
+
+#ifdef EDM_USING_PTHREAD
 
 #if defined(WIN32) || defined(WIN64)
 #include <windows.h>
@@ -58,5 +61,7 @@ typedef struct _ThreadPool{
 } ThreadPool,*pThreadPool;
 
 ThreadPoolErrCode initThreadPool(pThreadPool const pool, uint8_t maxThreadNum);
+
+#endif
 
 #endif /* PTHREAD_POOL_H_ */

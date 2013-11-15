@@ -87,7 +87,7 @@ void testThreadPoll(void){
 }
 int main()
 {
-	/* ¹Ø±Õprintf»º³åÊä³ö */
+	/* close printf buffer */
 	setbuf(stdout, NULL);
 	initLogger(TRUE);
 //	while (1) {

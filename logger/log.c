@@ -9,12 +9,23 @@
 
 #include "log.h"
 
+#if defined(EDM_USING_PTHREAD)
 static pthread_mutex_t printLock;
+#elif defined(EDM_USING_RTT)
+static rt_mutex_t printLock;
+#endif
+
+
 static uint8_t isOpenPrint = FALSE;
 static uint8_t isInitLog = FALSE;
 
 static void printTime(void);
 static void printThreadID(void);
+static void threadMutexInit(void* mutex);
+static void threadMutexLock(void* mutex);
+static void threadMutexUnlock(void* mutex);
+static void threadMutexDestroy(void* mutex);
+
 
 /**
  * This function will initialize logger.
@@ -23,7 +34,7 @@ static void printThreadID(void);
 void initLogger(uint8_t isOpen) {
 	isOpenPrint = isOpen;
 	if (isOpen) {
-		pthread_mutex_init(&printLock, NULL);
+		threadMutexInit(&printLock);
 	}
 	isInitLog = TRUE;
 }
@@ -45,14 +56,14 @@ void debug(const char *file, const long line, const char *format, ...) {
 	va_start(args, format);
 	/* args point to the first variable parameter */
 	/* lock the print ,make sure the print data full */
-	pthread_mutex_lock(&printLock);
+	threadMutexLock(&printLock);
 	printTime();
 	printThreadID();
 	printf("(%s:%ld) ", file, line);
 	/* must use vprintf to print */
 	vprintf(format, args);
 	printf("\n");
-	pthread_mutex_unlock(&printLock);
+	threadMutexUnlock(&printLock);
 	va_end(args);
 }
 
@@ -62,7 +73,7 @@ void debug(const char *file, const long line, const char *format, ...) {
  */
 void destroyLogger(void) {
 	if (isOpenPrint) {
-		pthread_mutex_destroy(&printLock);
+		threadMutexDestroy(&printLock);
 	}
 	isOpenPrint = FALSE;
 	isInitLog = FALSE;
@@ -73,11 +84,17 @@ void destroyLogger(void) {
  *
  */
 void printThreadID(void){
+
+#if defined(EDM_USING_PTHREAD)
 #if defined(WIN32) || defined(WIN64)
 	printf("tid:%04ld ",GetCurrentThreadId());
 #else
 	printf("tid:%#x ",pthread_self());
 #endif
+#elif defined(EDM_USING_RTT)
+	printf("tid:%04ld ",(uint32_t)rt_thread_self());
+#endif
+
 }
 
 /**
@@ -85,6 +102,7 @@ void printThreadID(void){
  *
  */
 void printTime(void) {
+#if defined(EDM_USING_PTHREAD)
 #if defined(WIN32) || defined(WIN64)
 	SYSTEMTIME currTime;
 	GetLocalTime(&currTime);
@@ -101,5 +119,68 @@ void printTime(void) {
 	}
 	printf("%02d-%02d %02d:%02d:%02d.%03d ",p->tm_mon+1 ,p->tm_mday ,p->tm_hour ,p->tm_min,p->tm_sec);
 #endif
+
+#elif defined(EDM_USING_RTT)
+	printf("tick: %010ld ",rt_tick_get());
+#endif
 }
 
+/**
+ * This function is initialize the printLock mutex.
+ *
+ * @param mutex the printLock pointer
+ *
+ */
+static void threadMutexInit(void* mutex){
+#if defined(EDM_USING_PTHREAD)
+	pthread_mutex_init(&((pthread_mutex_t)mutex), NULL);
+
+#elif defined(EDM_USING_RTT)
+	(*(rt_mutex_t*)mutex) = rt_mutex_create("printLock",RT_IPC_FLAG_PRIO);
+#endif
+}
+
+/**
+ * This function is lock the printLock mutex.
+ *
+ * @param mutex the printLock pointer
+ *
+ */
+static void threadMutexLock(void* mutex){
+#if defined(EDM_USING_PTHREAD)
+	pthread_mutex_lock(&((pthread_mutex_t)mutex));
+
+#elif defined(EDM_USING_RTT)
+	rt_mutex_take(*(rt_mutex_t*)mutex,RT_WAITING_FOREVER);
+#endif
+}
+
+/**
+ * This function is unlock the printLock mutex.
+ *
+ * @param mutex the printLock pointer
+ *
+ */
+static void threadMutexUnlock(void* mutex){
+#if defined(EDM_USING_PTHREAD)
+	pthread_mutex_unlock(&((pthread_mutex_t)mutex));
+
+#elif defined(EDM_USING_RTT)
+	rt_mutex_release(*(rt_mutex_t*)mutex);
+#endif
+}
+
+/**
+ * This function is destroy the printLock mutex.
+ *
+ * @param mutex the printLock pointer
+ *
+ */
+static void threadMutexDestroy(void* mutex){
+#if defined(EDM_USING_PTHREAD)
+	pthread_mutex_destroy(&((pthread_mutex_t)mutex));
+
+#elif defined(EDM_USING_RTT)
+	rt_mutex_delete(*(rt_mutex_t*)mutex);
+#endif
+}

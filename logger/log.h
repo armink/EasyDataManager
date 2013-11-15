@@ -13,15 +13,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <pthread.h>
 #include "types.h"
+#include "edm_config.h"
 
+#if defined(EDM_USING_PTHREAD)
+#include <pthread.h>
 #include <time.h>
 #if defined(WIN32) || defined(WIN64)
 #include <windows.h>
-#else
-
 #endif
+#elif defined(EDM_USING_RTT)
+#include <rthw.h>
+#include <rtthread.h>
+#endif
+
 
 #define LogD(...) debug( __FILE__, __LINE__, __VA_ARGS__)
 
