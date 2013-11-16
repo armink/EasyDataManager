@@ -20,7 +20,7 @@ static uint8_t isOpenPrint = FALSE;
 static uint8_t isInitLog = FALSE;
 
 static void printTime(void);
-static void printThreadID(void);
+static void printThreadInfo(void);
 static void threadMutexInit(void* mutex);
 static void threadMutexLock(void* mutex);
 static void threadMutexUnlock(void* mutex);
@@ -58,7 +58,7 @@ void debug(const char *file, const long line, const char *format, ...) {
 	/* lock the print ,make sure the print data full */
 	threadMutexLock(&printLock);
 	printTime();
-	printThreadID();
+	printThreadInfo();
 	printf("(%s:%ld) ", file, line);
 	/* must use vprintf to print */
 	vprintf(format, args);
@@ -83,7 +83,7 @@ void destroyLogger(void) {
  * This function is print thread info.
  *
  */
-void printThreadID(void){
+void printThreadInfo(void){
 
 #if defined(EDM_USING_PTHREAD)
 #if defined(WIN32) || defined(WIN64)
@@ -92,7 +92,7 @@ void printThreadID(void){
 	printf("tid:%#x ",pthread_self());
 #endif
 #elif defined(EDM_USING_RTT)
-	printf("tid:%04ld ",(uint32_t)rt_thread_self());
+	printf("thread_name:%s ",rt_thread_self()->name);
 #endif
 
 }

@@ -76,17 +76,20 @@ void rtthread_startup(void)
 //±¸    ×¢£ºEditor£ºArmink   2013-08-02   Company: BXXJS
 //******************************************************************
 void thread_entry_SysMonitor(void* parameter) {
+	uint8_t i = 0;
 	initLogger(TRUE);
-	while (1) {
+	for (i = 0; i < 10; i++) {
 		LogD("hello, world2");
 		rt_thread_delay(1000);
 	}
+	destroyLogger();
+	exit(0);
 }
 
 int rt_application_init() {
 	rt_thread_t tid;
 
-	tid = rt_thread_create("test", thread_entry_SysMonitor, RT_NULL, 2048, 4,
+	tid = rt_thread_create("SysMonitor", thread_entry_SysMonitor, RT_NULL, 2048, 4,
 			20);
 	if (tid != RT_NULL)
 		rt_thread_startup(tid);

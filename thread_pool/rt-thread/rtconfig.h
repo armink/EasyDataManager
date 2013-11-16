@@ -26,7 +26,7 @@
 
 /* SECTION: basic kernel options */
 /* RT_NAME_MAX*/
-#define RT_NAME_MAX	8
+#define RT_NAME_MAX	16
 
 /* RT_ALIGN_SIZE*/
 #define RT_ALIGN_SIZE	4
