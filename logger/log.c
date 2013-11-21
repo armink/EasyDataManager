@@ -12,7 +12,9 @@
 #if defined(EDM_USING_PTHREAD)
 static pthread_mutex_t printLock;
 #elif defined(EDM_USING_RTT)
-static rt_mutex_t printLock;
+static struct rt_mutex _printLock;
+static rt_mutex_t printLock = &_printLock;
+//static rt_mutex_t printLock;
 #endif
 
 
@@ -21,10 +23,10 @@ static uint8_t isInitLog = FALSE;
 
 static void printTime(void);
 static void printThreadInfo(void);
-static void threadMutexInit(void* mutex);
-static void threadMutexLock(void* mutex);
-static void threadMutexUnlock(void* mutex);
-static void threadMutexDestroy(void* mutex);
+static void threadMutexInit(void);
+static void threadMutexLock(void);
+static void threadMutexUnlock(void);
+static void threadMutexDestroy(void);
 
 
 /**
@@ -34,7 +36,7 @@ static void threadMutexDestroy(void* mutex);
 void initLogger(uint8_t isOpen) {
 	isOpenPrint = isOpen;
 	if (isOpen) {
-		threadMutexInit(&printLock);
+		threadMutexInit();
 	}
 	isInitLog = TRUE;
 }
@@ -56,14 +58,14 @@ void debug(const char *file, const long line, const char *format, ...) {
 	va_start(args, format);
 	/* args point to the first variable parameter */
 	/* lock the print ,make sure the print data full */
-	threadMutexLock(&printLock);
+	threadMutexLock();
 	printTime();
 	printThreadInfo();
 	printf("(%s:%ld) ", file, line);
 	/* must use vprintf to print */
 	vprintf(format, args);
 	printf("\n");
-	threadMutexUnlock(&printLock);
+	threadMutexUnlock();
 	va_end(args);
 }
 
@@ -73,7 +75,7 @@ void debug(const char *file, const long line, const char *format, ...) {
  */
 void destroyLogger(void) {
 	if (isOpenPrint) {
-		threadMutexDestroy(&printLock);
+		threadMutexDestroy();
 	}
 	isOpenPrint = FALSE;
 	isInitLog = FALSE;
@@ -128,59 +130,51 @@ void printTime(void) {
 /**
  * This function is initialize the printLock mutex.
  *
- * @param mutex the printLock pointer
- *
  */
-static void threadMutexInit(void* mutex){
+static void threadMutexInit(void){
 #if defined(EDM_USING_PTHREAD)
-	pthread_mutex_init(&((pthread_mutex_t)mutex), NULL);
+	pthread_mutex_init(printLock), NULL);
 
 #elif defined(EDM_USING_RTT)
-	(*(rt_mutex_t*)mutex) = rt_mutex_create("printLock",RT_IPC_FLAG_PRIO);
+	rt_mutex_init(printLock,"printLock",RT_IPC_FLAG_PRIO);
 #endif
 }
 
 /**
  * This function is lock the printLock mutex.
  *
- * @param mutex the printLock pointer
- *
  */
-static void threadMutexLock(void* mutex){
+static void threadMutexLock(void){
 #if defined(EDM_USING_PTHREAD)
-	pthread_mutex_lock(&((pthread_mutex_t)mutex));
+	pthread_mutex_lock(printLock);
 
 #elif defined(EDM_USING_RTT)
-	rt_mutex_take(*(rt_mutex_t*)mutex,RT_WAITING_FOREVER);
+	rt_mutex_take(printLock,RT_WAITING_FOREVER);
 #endif
 }
 
 /**
  * This function is unlock the printLock mutex.
  *
- * @param mutex the printLock pointer
- *
  */
-static void threadMutexUnlock(void* mutex){
+static void threadMutexUnlock(void){
 #if defined(EDM_USING_PTHREAD)
-	pthread_mutex_unlock(&((pthread_mutex_t)mutex));
+	pthread_mutex_unlock(printLock);
 
 #elif defined(EDM_USING_RTT)
-	rt_mutex_release(*(rt_mutex_t*)mutex);
+	rt_mutex_release(printLock);
 #endif
 }
 
 /**
  * This function is destroy the printLock mutex.
  *
- * @param mutex the printLock pointer
- *
  */
-static void threadMutexDestroy(void* mutex){
+static void threadMutexDestroy(void){
 #if defined(EDM_USING_PTHREAD)
-	pthread_mutex_destroy(&((pthread_mutex_t)mutex));
+	pthread_mutex_destroy(printLock);
 
 #elif defined(EDM_USING_RTT)
-	rt_mutex_delete(*(rt_mutex_t*)mutex);
+	rt_mutex_detach(printLock);
 #endif
 }

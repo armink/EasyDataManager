@@ -21,6 +21,10 @@ extern int  rt_application_init(void);
 
 extern rt_uint8_t *heap;
 
+//struct rt_thread thread_SysMonitor;
+//ALIGN(RT_ALIGN_SIZE)
+//rt_uint8_t thread_SysMonitor_stack[512];
+
 /**
  * This function will startup RT-Thread RTOS.
  */
@@ -87,12 +91,25 @@ void thread_entry_SysMonitor(void* parameter) {
 }
 
 int rt_application_init() {
-	rt_thread_t tid;
 
-	tid = rt_thread_create("SysMonitor", thread_entry_SysMonitor, RT_NULL, 2048, 4,
-			20);
-	if (tid != RT_NULL)
-		rt_thread_startup(tid);
+	static struct rt_thread thread_SysMonitor;
+	ALIGN(RT_ALIGN_SIZE)
+	static rt_uint8_t thread_SysMonitor_stack[512];
+
+	rt_thread_init(&thread_SysMonitor,
+                   "SysMonitor",
+                   thread_entry_SysMonitor,
+                   RT_NULL,
+                   thread_SysMonitor_stack,
+                   sizeof(thread_SysMonitor_stack),
+				   4,20);
+    rt_thread_startup(&thread_SysMonitor);
+
+//	rt_thread_t tid;
+//	tid = rt_thread_create("SysMonitor", thread_entry_SysMonitor, RT_NULL, 2048,
+//			4, 20);
+//	if (tid != RT_NULL)
+//		rt_thread_startup(tid);
 
 	return 0;
 }
