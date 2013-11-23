@@ -110,7 +110,7 @@ ThreadPoolErrCode destroy(pThreadPool pool) {
 		errorCode = THREAD_POOL_ALREADY_SHUTDOWN_ERR;
 	}
 	if (errorCode == THREAD_POOL_NO_ERR) {
-		pool->isShutdown = 1;
+		pool->isShutdown = TRUE;
 		/* wake up all thread from broadcast */
 		pthread_cond_broadcast(&(pool->queueReady));
 		/* wait all thread exit */
@@ -157,8 +157,7 @@ void* threadJob(void* arg) {
 		 * Before thread block the queueLock will unlock.
 		 * After thread wake up ,the queueLock will relock.*/
 		while (pool->curWaitThreadNum == 0 && !pool->isShutdown) {
-			LogD("the thread waiting for task add to task queue",
-					pthread_self());
+			LogD("the thread waiting for task add to task queue");
 			pthread_cond_wait(&(pool->queueReady), &(pool->queueLock));
 		}
 		if (pool->isShutdown) { /* thread pool will shutdown */

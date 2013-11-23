@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include <board.h>
 #include "log.h"
+#include "cache.h"
 extern int  rt_application_init(void);
 
 extern rt_uint8_t *heap;
@@ -69,6 +70,62 @@ void rtthread_startup(void)
     return ;
 }
 
+void *valueChangedListener1(void *arg) {
+	pCacheData data = (pCacheData)arg;
+	LogD("this is valueChangedListener1,the data %s was changed", data->name);
+	rt_thread_delay(1);
+	return NULL;
+}
+
+void *valueChangedListener2(void *arg) {
+	pCacheData data = (pCacheData)arg;
+	LogD("this is valueChangedListener2,the data %s was changed", data->name);
+	rt_thread_delay(1);
+	return NULL;
+}
+
+void testCache(void){
+	Cache cache;
+	uint16_t cacheLength,valueTemp[CACHE_LENGTH_MAX];
+	uint32_t cacheSize;
+	initCache(&cache,"cache",4);
+	valueTemp[0] = 0;
+	valueTemp[1] = 1;
+	valueTemp[2] = 2;
+	valueTemp[3] = 3;
+	cache.add(&cache,"温度",1,1,valueTemp,valueChangedListener1);
+	cache.add(&cache,"压力",2,2,valueTemp,valueChangedListener2);
+	cache.add(&cache,"湿度",3,3,valueTemp,NULL);
+	cache.add(&cache,"PM2.5",4,4,valueTemp,NULL);
+	cache.getSize(&cache,&cacheLength,&cacheSize);
+	cache.get(&cache,"温度",valueTemp);
+	cache.get(&cache,"压力",valueTemp);
+	cache.get(&cache,"湿度",valueTemp);
+	cache.get(&cache,"PM2.5",valueTemp);
+	cache.del(&cache,"温度");
+	cache.del(&cache,"压力");
+	cache.del(&cache,"湿度");
+	cache.del(&cache,"PM2.5");
+	cache.del(&cache,"PM2.5");
+	cache.get(&cache,"PM2.5",valueTemp);
+	cache.add(&cache,"PM2.5",4,4,valueTemp,valueChangedListener1);
+	cache.get(&cache,"PM2.5",valueTemp);
+	cache.getSize(&cache,&cacheLength,&cacheSize);
+	valueTemp[0] = 3;
+	valueTemp[1] = 2;
+	valueTemp[2] = 1;
+	valueTemp[3] = 0;
+	cache.set(&cache,"温度",valueTemp);
+	cache.set(&cache,"压力",valueTemp);
+	cache.set(&cache,"PM2.5",valueTemp);
+//	cache.remove(&cache,"PM2.5");
+	cache.get(&cache,"PM2.5",valueTemp);
+	cache.getSize(&cache,&cacheLength,&cacheSize);
+
+	rt_thread_delay(5);
+	cache.pool->destroy(cache.pool);
+}
+
 //***************************系统监控线程***************************
 //函数定义: void thread_entry_SysRunLed(void* parameter)
 //入口参数：无
@@ -78,6 +135,7 @@ void rtthread_startup(void)
 void thread_entry_SysMonitor(void* parameter) {
 	uint8_t i = 0;
 	initLogger(TRUE);
+	testCache();
 	for (i = 0; i < 10; i++) {
 		LogD("hello, world2");
 		rt_thread_delay(1000);
@@ -101,11 +159,11 @@ int rt_application_init() {
 				   4,20);
     rt_thread_startup(&thread_SysMonitor);
 
-	rt_thread_t tid;
-	tid = rt_thread_create("SysMonitor2", thread_entry_SysMonitor, RT_NULL, 2048,
-			4, 20);
-	if (tid != RT_NULL)
-		rt_thread_startup(tid);
+//	rt_thread_t tid;
+//	tid = rt_thread_create("SysMonitor2", thread_entry_SysMonitor, RT_NULL, 2048,
+//			4, 20);
+//	if (tid != RT_NULL)
+//		rt_thread_startup(tid);
 
 	return 0;
 }

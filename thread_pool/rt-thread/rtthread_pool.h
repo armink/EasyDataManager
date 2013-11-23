@@ -18,6 +18,9 @@
 #ifdef EDM_USING_RTT
 
 #define THREAD_POOL_MAX_THREAD_NUM      16    /**< thread pool max setting thread number */
+#define THREAD_POOL_JOB_PRIORITY        10    /**< thread poll job's priority in rt-thread */
+#define THREAD_POOL_JOB_STACK_SIZE    2048    /**< thread poll job's stack size rt-thread */
+#define THREAD_POOL_JOB_TICK             5    /**< thread poll job's time slice in rt-thread */
 
 /* thread pool error code */
 typedef enum{
@@ -40,7 +43,7 @@ typedef struct _ThreadPool{
 	rt_mutex_t queueLock;       /**< task queue mutex lock */
 	rt_sem_t queueReady;        /**< a semaphore which for task queue ready */
 	uint8_t isShutdown;         /**< shutdown state,if shutdown the value will equal TRUE  */
-	rt_thread_t threadID;       /**< thread queue which in thread pool */
+	rt_thread_t* threadID;      /**< thread queue which in thread pool */
 	uint8_t maxThreadNum;       /**< the thread max number in thread pool */
 	uint8_t curWaitThreadNum;   /**< the current waiting thread number in thread pool */
 	ThreadPoolErrCode (*addTask)(struct _ThreadPool* const pool,
