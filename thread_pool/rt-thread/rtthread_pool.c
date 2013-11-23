@@ -27,7 +27,8 @@ static void syncUnlock(pThreadPool pool);
  */
 ThreadPoolErrCode initThreadPool(pThreadPool const pool, uint8_t maxThreadNum) {
 	ThreadPoolErrCode errorCode = THREAD_POOL_NO_ERR;
-	uint8_t i;
+	char name[RT_NAME_MAX] = "threadJob";
+	uint8_t i ;
 	if (maxThreadNum > THREAD_POOL_MAX_THREAD_NUM) {
 		errorCode = THREAD_POOL_MAX_NUM_ERR;
 	}
@@ -43,13 +44,15 @@ ThreadPoolErrCode initThreadPool(pThreadPool const pool, uint8_t maxThreadNum) {
 		pool->destroy = destroy;
 		pool->lock = syncLock;
 		pool->unlock = syncUnlock;
-		pool->threadID = (rt_thread_t*) rt_malloc(
+		pool->threadID = (rt_thread_t*) malloc(
 				maxThreadNum * sizeof(struct rt_thread));
 		for (i = 0; i < maxThreadNum; i++) {
-			pool->threadID[i] = rt_thread_create("threadJob", threadJob, pool,
+			name[strlen(name)] = '0' + i;
+			pool->threadID[i] = rt_thread_create(name, threadJob, pool,
 			THREAD_POOL_JOB_STACK_SIZE, THREAD_POOL_JOB_PRIORITY,
 			THREAD_POOL_JOB_TICK * i);
 			rt_thread_startup(pool->threadID[i]);
+			name[strlen(name) - 1] = '\0';
 			LogD("create thread success.Current total thread number is %d",
 					i + 1);
 		}
@@ -71,7 +74,7 @@ ThreadPoolErrCode addTask(pThreadPool const pool, void *(*process)(void *arg),
 		void *arg) {
 	ThreadPoolErrCode errorCode = THREAD_POOL_NO_ERR;
 	pTask member = NULL;
-	pTask newtask = (pTask) rt_malloc(sizeof(Task));
+	pTask newtask = (pTask) malloc(sizeof(Task));
 	newtask->process = process;
 	newtask->arg = arg;
 	newtask->next = NULL;
@@ -123,18 +126,18 @@ ThreadPoolErrCode destroy(pThreadPool pool) {
 			rt_thread_delete(pool->threadID[i]);
 		}
 		/* release memory */
-		rt_free(pool->threadID);
+		free(pool->threadID);
 		pool->threadID = NULL;
 		/* destroy task queue */
 		while (pool->queueHead != NULL) {
 			head = pool->queueHead;
 			pool->queueHead = pool->queueHead->next;
-			rt_free(head);
+			free(head);
 		}
 		/* destroy mutex */
 		rt_mutex_delete(pool->userLock);
 		/* release memory */
-		rt_free(pool);
+		free(pool);
 		pool = NULL;
 		LogD("Thread pool destroy success");
 	}
@@ -149,6 +152,7 @@ ThreadPoolErrCode destroy(pThreadPool pool) {
  */
 void threadJob(void* arg) {
 	pThreadPool pool = NULL;
+	LogD("threadJob is running");
 	while (1) {
 		pool = (pThreadPool) arg;
 		pTask task = NULL;
@@ -178,7 +182,7 @@ void threadJob(void* arg) {
 		/* run task */
 		(*(task->process))(task->arg);
 		/* release memory */
-		rt_free(task);
+		free(task);
 		task = NULL;
 	}
 	/* never reach here */

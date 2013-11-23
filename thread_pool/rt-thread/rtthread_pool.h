@@ -12,6 +12,7 @@
 
 #include <rthw.h>
 #include <rtthread.h>
+#include <string.h>
 #include "log.h"
 #include "edm_config.h"
 
