@@ -122,7 +122,7 @@ void testCache(void){
 	cache.get(&cache,"PM2.5",valueTemp);
 	cache.getSize(&cache,&cacheLength,&cacheSize);
 
-	rt_thread_delay(5);
+	rt_thread_delay(1000);
 	cache.pool->destroy(cache.pool);
 }
 
@@ -159,11 +159,11 @@ int rt_application_init() {
 				   4,20);
     rt_thread_startup(&thread_SysMonitor);
 
-//	rt_thread_t tid;
-//	tid = rt_thread_create("SysMonitor2", thread_entry_SysMonitor, RT_NULL, 2048,
-//			4, 20);
-//	if (tid != RT_NULL)
-//		rt_thread_startup(tid);
+	rt_thread_t tid;
+	tid = rt_thread_create("SysMonitor2", thread_entry_SysMonitor, RT_NULL, 2048,
+			4, 20);
+	if (tid != RT_NULL)
+		rt_thread_startup(tid);
 
 	return 0;
 }
