@@ -55,6 +55,7 @@ ThreadPoolErrCode initThreadPool(pThreadPool const pool, uint8_t maxThreadNum) {
 			name[strlen(name) - 1] = '\0';
 			LogD("create thread success.Current total thread number is %d",
 					i + 1);
+			rt_thread_delay(THREAD_POOL_THREADS_INIT_TIME);
 		}
 		LogD("initialize thread pool success!");
 	}
@@ -117,7 +118,6 @@ ThreadPoolErrCode destroy(pThreadPool pool) {
 	if (errorCode == THREAD_POOL_NO_ERR) {
 		pool->isShutdown = TRUE;
 		/* wake up all thread from broadcast */
-		//TODO 重点测试逻辑
 		/* delete mutex and semaphore then all waiting thread will wake up */
 		rt_mutex_delete(pool->queueLock);
 		rt_sem_delete(pool->queueReady);
@@ -164,13 +164,18 @@ void threadJob(void* arg) {
 		 * After thread wake up ,the queueLock will relock.*/
 		while (pool->curWaitThreadNum == 0 && !pool->isShutdown) {
 			LogD("the thread waiting for task add to task queue");
-			rt_sem_take(pool->queueReady, RT_WAITING_FOREVER);
+			/* ququeReady is NULL,the thread will block */
+			if(rt_sem_trytake(pool->queueReady)){
+				rt_mutex_release(pool->queueLock);
+				rt_sem_take(pool->queueReady, RT_WAITING_FOREVER);
+				rt_mutex_take(pool->queueLock, RT_WAITING_FOREVER);
+			}else{/* ququeReady is not NULL,the ququeReady semaphore will decrease */
+				rt_sem_take(pool->queueReady, RT_WAITING_FOREVER);
+			}
 		}
 		if (pool->isShutdown) { /* thread pool will shutdown */
 			rt_mutex_release(pool->queueLock);
-//			TODO 这里需要测试
 			return;
-//			rt_thread_delete(rt_thread_self());
 		}
 		RT_ASSERT(pool->curWaitThreadNum != 0);
 		RT_ASSERT(pool->queueHead != NULL);

@@ -93,35 +93,36 @@ void testCache(void){
 	valueTemp[1] = 1;
 	valueTemp[2] = 2;
 	valueTemp[3] = 3;
-	cache.add(&cache,"温度",1,1,valueTemp,valueChangedListener1);
-	cache.add(&cache,"压力",2,2,valueTemp,valueChangedListener2);
-	cache.add(&cache,"湿度",3,3,valueTemp,NULL);
+	//test add data
+	cache.add(&cache,"Temp",1,1,valueTemp,valueChangedListener1);
+	cache.add(&cache,"Press",2,2,valueTemp,valueChangedListener2);
+	cache.add(&cache,"Humidity",3,3,valueTemp,NULL);
 	cache.add(&cache,"PM2.5",4,4,valueTemp,NULL);
+	//test get data
 	cache.getSize(&cache,&cacheLength,&cacheSize);
-	cache.get(&cache,"温度",valueTemp);
-	cache.get(&cache,"压力",valueTemp);
-	cache.get(&cache,"湿度",valueTemp);
+	cache.get(&cache,"Temp",valueTemp);
+	cache.get(&cache,"Press",valueTemp);
+	cache.get(&cache,"Humidity",valueTemp);
 	cache.get(&cache,"PM2.5",valueTemp);
-	cache.del(&cache,"温度");
-	cache.del(&cache,"压力");
-	cache.del(&cache,"湿度");
+	//test delete data
+	cache.del(&cache,"Temp");
+	cache.del(&cache,"Press");
+	cache.del(&cache,"Humidity");
 	cache.del(&cache,"PM2.5");
 	cache.del(&cache,"PM2.5");
 	cache.get(&cache,"PM2.5",valueTemp);
+	//test valueChangedListener
 	cache.add(&cache,"PM2.5",4,4,valueTemp,valueChangedListener1);
-	cache.get(&cache,"PM2.5",valueTemp);
-	cache.getSize(&cache,&cacheLength,&cacheSize);
+	cache.add(&cache,"Press",2,2,valueTemp,valueChangedListener2);
 	valueTemp[0] = 3;
 	valueTemp[1] = 2;
 	valueTemp[2] = 1;
 	valueTemp[3] = 0;
-	cache.set(&cache,"温度",valueTemp);
-	cache.set(&cache,"压力",valueTemp);
+	cache.set(&cache,"Press",valueTemp);
 	cache.set(&cache,"PM2.5",valueTemp);
-//	cache.remove(&cache,"PM2.5");
 	cache.get(&cache,"PM2.5",valueTemp);
 	cache.getSize(&cache,&cacheLength,&cacheSize);
-
+	//test destroy cache
 	rt_thread_delay(1000);
 	cache.pool->destroy(cache.pool);
 }
@@ -136,7 +137,7 @@ void thread_entry_SysMonitor(void* parameter) {
 	uint8_t i = 0;
 	initLogger(TRUE);
 	testCache();
-	for (i = 0; i < 10; i++) {
+	for (i = 0; i < 5; i++) {
 		LogD("hello, world2");
 		rt_thread_delay(1000);
 	}
