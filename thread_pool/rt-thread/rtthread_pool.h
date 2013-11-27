@@ -21,7 +21,7 @@
 #define THREAD_POOL_THREADS_INIT_TIME   30    /**< threads initialize average waiting time */
 #define THREAD_POOL_MAX_THREAD_NUM      16    /**< thread pool max setting thread number */
 #define THREAD_POOL_JOB_PRIORITY        10    /**< thread poll job's priority in rt-thread */
-#define THREAD_POOL_JOB_STACK_SIZE    2048    /**< thread poll job's stack size rt-thread */
+#define THREAD_POOL_JOB_STACK_SIZE     512    /**< thread poll job's stack size rt-thread */
 #define THREAD_POOL_JOB_TICK             5    /**< thread poll job's time slice in rt-thread */
 
 /* thread pool error code */

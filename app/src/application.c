@@ -95,30 +95,30 @@ void testCache(void){
 	valueTemp[3] = 3;
 	//test add data
 	cache.add(&cache,"Temp",1,1,valueTemp,valueChangedListener1);
-	cache.add(&cache,"Press",2,2,valueTemp,valueChangedListener2);
+	cache.add(&cache,"Pressure",2,2,valueTemp,valueChangedListener2);
 	cache.add(&cache,"Humidity",3,3,valueTemp,NULL);
 	cache.add(&cache,"PM2.5",4,4,valueTemp,NULL);
 	//test get data
 	cache.getSize(&cache,&cacheLength,&cacheSize);
 	cache.get(&cache,"Temp",valueTemp);
-	cache.get(&cache,"Press",valueTemp);
+	cache.get(&cache,"Pressure",valueTemp);
 	cache.get(&cache,"Humidity",valueTemp);
 	cache.get(&cache,"PM2.5",valueTemp);
 	//test delete data
 	cache.del(&cache,"Temp");
-	cache.del(&cache,"Press");
+	cache.del(&cache,"Pressure");
 	cache.del(&cache,"Humidity");
 	cache.del(&cache,"PM2.5");
 	cache.del(&cache,"PM2.5");
 	cache.get(&cache,"PM2.5",valueTemp);
 	//test valueChangedListener
 	cache.add(&cache,"PM2.5",4,4,valueTemp,valueChangedListener1);
-	cache.add(&cache,"Press",2,2,valueTemp,valueChangedListener2);
+	cache.add(&cache,"Pressure",2,2,valueTemp,valueChangedListener2);
 	valueTemp[0] = 3;
 	valueTemp[1] = 2;
 	valueTemp[2] = 1;
 	valueTemp[3] = 0;
-	cache.set(&cache,"Press",valueTemp);
+	cache.set(&cache,"Pressure",valueTemp);
 	cache.set(&cache,"PM2.5",valueTemp);
 	cache.get(&cache,"PM2.5",valueTemp);
 	cache.getSize(&cache,&cacheLength,&cacheSize);

@@ -152,10 +152,10 @@ ThreadPoolErrCode destroy(pThreadPool pool) {
  */
 void threadJob(void* arg) {
 	pThreadPool pool = NULL;
+	pTask task = NULL;
 	LogD("threadJob is running");
 	while (1) {
 		pool = (pThreadPool) arg;
-		pTask task = NULL;
 		/* lock thread pool */
 		rt_mutex_take(pool->queueLock, RT_WAITING_FOREVER);
 		/* If waiting thread number is 0 ,and thread is not shutdown.
