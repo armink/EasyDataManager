@@ -12,8 +12,7 @@
 
 static pCacheData hasData(pCache const cache, const char* name);
 static CacheErrCode addData(pCache const cache, char* name, uint8_t length,
-		uint8_t level, uint16_t* value,
-		void* (*valueChangedListener)(void *arg));
+		uint16_t* value, void* (*valueChangedListener)(void *arg));
 static CacheErrCode delData(pCache const cache, const char* name);
 static CacheErrCode getValue(pCache const cache, const char* name,
 		uint16_t* value);
@@ -93,14 +92,13 @@ pCacheData hasData(pCache const cache, const char* name) {
  * @param cache the cache pointer
  * @param name the name of CacheData
  * @param length the value length
- * @param level the refresh level.If level is 0,value will not refresh
  * @param value the value point
  * @param valueChangedListener the changed value's callback function
  *
  * @return error code
  */
 CacheErrCode addData(pCache const cache, char* name, uint8_t length,
-		uint8_t level, uint16_t* value,
+		uint16_t* value,
 		void* (*valueChangedListener)(void *arg)) {
 	CacheErrCode errorCode = CACHE_NO_ERR;
 	pCacheData data;
@@ -123,15 +121,6 @@ CacheErrCode addData(pCache const cache, char* name, uint8_t length,
 			errorCode = CACHE_LENGTH_ERROR;
 		} else {
 			data->length = length;
-		}
-	}
-
-	if (errorCode == CACHE_NO_ERR) {
-		if (level > CACHE_LEVEL_MAX) {
-			LogD("the level %d is greater than max level", level);
-			errorCode = CACHE_LEVEL_ERROR;
-		} else {
-			data->level = level;
 		}
 	}
 

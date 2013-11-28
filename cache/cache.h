@@ -27,7 +27,6 @@
 
 #define CACHE_NAME_MAX     20       /**< CacheData max name length */
 #define CACHE_LENGTH_MAX   64       /**< value max length */
-#define CACHE_LEVEL_MAX    10       /**< value max level */
 
 /* Cache error code */
 typedef enum{
@@ -35,7 +34,6 @@ typedef enum{
 	CACHE_NAME_ERROR,              /**< CacheData name has error */
 	CACHE_INDEX_ERROR,             /**< value index has error */
 	CACHE_LENGTH_ERROR,            /**< value length has error */
-	CACHE_LEVEL_ERROR,             /**< value level has error */
 	CACHE_NO_VALUE,                /**< value not find */
 	CACHE_ILL_ARG,                 /**< illegal argument */
 	CACHE_NOT_INIT,                /**< cache not initialize */
@@ -56,8 +54,7 @@ typedef struct _CacheData{
 typedef struct _Cache {
 	pCacheData (*has)(struct _Cache* const cache, const char* name);
 	CacheErrCode (*add)(struct _Cache* const cache, char* name, uint8_t length,
-			uint8_t level, uint16_t* value,
-			void* (*valueChangedListener)(void *arg));
+			uint16_t* value, void* (*valueChangedListener)(void *arg));
 	CacheErrCode (*del)(struct _Cache* const cache, const char* name);
 	CacheErrCode (*set)(struct _Cache* const cache, const char* name,
 			uint16_t* value);
