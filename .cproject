@@ -40,10 +40,11 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/EasyDataManager/app/inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/EasyDataManager/cache}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/EasyDataManager/logger}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/EasyDataManager/thread_pool/pthread}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/EasyDataManager/thread_pool/rt-thread}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/EasyDataManager/thread_pool/rt-thread/inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/EasyDataManager/thread_pool/rt-thread/drivers}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/EasyDataManager/thread_pool/pthread}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/EasyDataManager/thread_pool/ucosiii/Include}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.331462285" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
@@ -61,11 +62,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="inc|drivers|rt-thread|app|thread_pool|cache|pthread|posix|ucos|src|logger" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
-						<entry excluding="src/main.c|main.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="app"/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="cache"/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="logger"/>
-						<entry excluding="ucos" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="thread_pool"/>
+						<entry excluding="thread_pool/ucosiii/App/Stack.c|thread_pool/ucosiii/App/Random.c|thread_pool/ucosiii/App/Radian.c|thread_pool/ucosiii/App/main.c|thread_pool/ucosiii/App/Exec.c|thread_pool/ucosiiibak|thread_pool/ucosii|thread_pool/ucos2|app/src/main.c|app/src/application.c|app1|logger1|drivers|inc|rt-thread|posix|pthread|thread_pool1|ucos|cache1|src" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -110,16 +107,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="drivers|inc|rt-thread|app|thread_pool|cache|pthread|posix|ucos|src|logger" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
-						<entry excluding="src/main.c|main.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="app"/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="cache"/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="logger"/>
-						<entry excluding="drivers|rt-thread|pthread|ucos" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="thread_pool"/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="thread_pool/pthread"/>
-						<entry excluding="drivers|inc|src|libcpu/posix" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="thread_pool/rt-thread"/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="thread_pool/rt-thread/drivers"/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="thread_pool/rt-thread/inc"/>
-						<entry excluding="inc" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="thread_pool/rt-thread/src"/>
+						<entry excluding="thread_pool/ucosiii/App/Stack.c|thread_pool/ucosiii/App/Random.c|thread_pool/ucosiii/App/Radian.c|thread_pool/ucosiii/App/main.c|thread_pool/ucosiii/App/Exec.c|thread_pool/ucosiiibak|thread_pool/ucosii|thread_pool/ucos2|app/src/main.c|app/src/application.c|thread_pool/rt-thread/inc|logger1|app1|rt-thread|thread_pool/rt-thread|pthread|src|thread_pool/rt-thread/drivers|drivers|inc|thread_pool/rt-thread/src|posix|thread_pool1|thread_pool/pthread|ucos|cache1" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
