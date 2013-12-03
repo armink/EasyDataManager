@@ -25,7 +25,7 @@
 								</outputEntries>
 							</builder>
 							<tool id="cdt.managedbuild.tool.gnu.assembler.mingw.exe.debug.1699909841" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.mingw.exe.debug">
-								<option id="gnu.both.asm.option.include.paths.1479140462" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath"/>
+								<option id="gnu.both.asm.option.include.paths.1479140462" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths"/>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.2114710230" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.archiver.mingw.base.269465397" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.mingw.base"/>
@@ -62,7 +62,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="thread_pool/ucosiii/App/Stack.c|thread_pool/ucosiii/App/Random.c|thread_pool/ucosiii/App/Radian.c|thread_pool/ucosiii/App/main.c|thread_pool/ucosiii/App/Exec.c|thread_pool/ucosiiibak|thread_pool/ucosii|thread_pool/ucos2|app/src/main.c|app/src/application.c|app1|logger1|drivers|inc|rt-thread|posix|pthread|thread_pool1|ucos|cache1|src" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="app/src/app_pthread.c|app/src/app_ucos.c|thread_pool/ucosiii|thread_pool/ucosiii/App/Stack.c|thread_pool/ucosiii/App/Random.c|thread_pool/ucosiii/App/Radian.c|thread_pool/ucosiii/App/main.c|thread_pool/ucosiii/App/Exec.c|thread_pool/ucosiiibak|thread_pool/ucosii|thread_pool/ucos2|app1|logger1|drivers|inc|rt-thread|posix|pthread|thread_pool1|ucos|cache1|src" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -107,7 +107,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="thread_pool/ucosiii/App/Stack.c|thread_pool/ucosiii/App/Random.c|thread_pool/ucosiii/App/Radian.c|thread_pool/ucosiii/App/main.c|thread_pool/ucosiii/App/Exec.c|thread_pool/ucosiiibak|thread_pool/ucosii|thread_pool/ucos2|app/src/main.c|app/src/application.c|thread_pool/rt-thread/inc|logger1|app1|rt-thread|thread_pool/rt-thread|pthread|src|thread_pool/rt-thread/drivers|drivers|inc|thread_pool/rt-thread/src|posix|thread_pool1|thread_pool/pthread|ucos|cache1" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="app/src/app_pthread.c|app/src/app_ucos.c|thread_pool/ucosiii|thread_pool/ucosiii/App/Stack.c|thread_pool/ucosiii/App/Random.c|thread_pool/ucosiii/App/Radian.c|thread_pool/ucosiii/App/main.c|thread_pool/ucosiii/App/Exec.c|thread_pool/ucosiiibak|thread_pool/ucosii|thread_pool/ucos2|thread_pool/rt-thread/inc|logger1|app1|rt-thread|thread_pool/rt-thread|pthread|src|thread_pool/rt-thread/drivers|drivers|inc|thread_pool/rt-thread/src|posix|thread_pool1|thread_pool/pthread|ucos|cache1" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

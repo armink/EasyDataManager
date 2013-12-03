@@ -46,12 +46,14 @@ ThreadPoolErrCode initThreadPool(pThreadPool const pool, uint8_t maxThreadNum) {
 		pool->unlock = syncUnlock;
 		pool->threadID = (rt_thread_t*) malloc(
 				maxThreadNum * sizeof(struct rt_thread));
+		RT_ASSERT(pool->threadID != NULL);
 		for (i = 0; i < maxThreadNum; i++) {
 			name[strlen(name)] = '0' + i;
 			pool->threadID[i] = rt_thread_create(name, threadJob, pool,
 			THREAD_POOL_JOB_STACK_SIZE, THREAD_POOL_JOB_PRIORITY,
 			THREAD_POOL_JOB_TICK * i);
 			rt_thread_startup(pool->threadID[i]);
+			RT_ASSERT(pool->threadID[i] != NULL);
 			name[strlen(name) - 1] = '\0';
 			LogD("create thread success.Current total thread number is %d",
 					i + 1);
@@ -76,6 +78,7 @@ ThreadPoolErrCode addTask(pThreadPool const pool, void *(*process)(void *arg),
 	ThreadPoolErrCode errorCode = THREAD_POOL_NO_ERR;
 	pTask member = NULL;
 	pTask newtask = (pTask) malloc(sizeof(Task));
+	RT_ASSERT(newtask != NULL);
 	newtask->process = process;
 	newtask->arg = arg;
 	newtask->next = NULL;
