@@ -34,8 +34,11 @@ ThreadPoolErrCode initThreadPool(pThreadPool const pool, uint8_t maxThreadNum) {
 	}
 	if (errorCode == THREAD_POOL_NO_ERR) {
 		pool->queueLock = rt_mutex_create("queueLock", RT_IPC_FLAG_PRIO);
+		RT_ASSERT(pool->queueLock != NULL);
 		pool->userLock = rt_mutex_create("userLock", RT_IPC_FLAG_PRIO);
+		RT_ASSERT(pool->userLock != NULL);
 		pool->queueReady = rt_sem_create("queueReady", 0, RT_IPC_FLAG_PRIO);
+		RT_ASSERT(pool->queueReady != NULL);
 		pool->queueHead = NULL;
 		pool->maxThreadNum = maxThreadNum;
 		pool->curWaitThreadNum = 0;
@@ -52,8 +55,8 @@ ThreadPoolErrCode initThreadPool(pThreadPool const pool, uint8_t maxThreadNum) {
 			pool->threadID[i] = rt_thread_create(name, threadJob, pool,
 			THREAD_POOL_JOB_STACK_SIZE, THREAD_POOL_JOB_PRIORITY,
 			THREAD_POOL_JOB_TICK * i);
-			rt_thread_startup(pool->threadID[i]);
 			RT_ASSERT(pool->threadID[i] != NULL);
+			rt_thread_startup(pool->threadID[i]);
 			name[strlen(name) - 1] = '\0';
 			LogD("create thread success.Current total thread number is %d",
 					i + 1);
