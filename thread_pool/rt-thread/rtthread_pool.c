@@ -48,7 +48,7 @@ ThreadPoolErrCode initThreadPool(pThreadPool const pool, uint8_t maxThreadNum) {
 		pool->lock = syncLock;
 		pool->unlock = syncUnlock;
 		pool->threadID = (rt_thread_t*) malloc(
-				maxThreadNum * sizeof(struct rt_thread));
+				maxThreadNum * sizeof(rt_thread_t));
 		RT_ASSERT(pool->threadID != NULL);
 		for (i = 0; i < maxThreadNum; i++) {
 			name[strlen(name)] = '0' + i;
