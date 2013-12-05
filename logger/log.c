@@ -52,6 +52,9 @@ void initLogger(uint8_t isOpen) {
  */
 void debug(const char *file, const long line, const char *format, ...) {
 	va_list args;
+#if defined(EDM_USING_RTT)
+	static char rt_log_buf[RT_CONSOLEBUF_SIZE];
+#endif
 	if (!isOpenPrint || !isInitLog) {
 		return;
 	}
@@ -69,8 +72,8 @@ void debug(const char *file, const long line, const char *format, ...) {
 #elif defined(EDM_USING_RTT)
 	rt_kprintf("(%s:%ld) ", file, line);
 	/* must use vprintf to print */
-	rt_kprintf(format,args);
-	rt_kprintf("\n");
+	rt_vsprintf(rt_log_buf,format,args);
+	rt_kprintf("%s\n",rt_log_buf);
 #endif
 	threadMutexUnlock();
 	va_end(args);

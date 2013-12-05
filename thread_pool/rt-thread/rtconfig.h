@@ -90,7 +90,6 @@
 /* SECTION: Console options */
 /* the buffer size of console*/
 #define RT_CONSOLEBUF_SIZE	128
-#define RT_CONSOLE_DEVICE_NAME	"sci0"
 
 /* SECTION: component options */
 #define RT_USING_COMPONENTS_INIT
