@@ -61,10 +61,17 @@ void debug(const char *file, const long line, const char *format, ...) {
 	threadMutexLock();
 	printTime();
 	printThreadInfo();
+#if defined(EDM_USING_PTHREAD)
 	printf("(%s:%ld) ", file, line);
 	/* must use vprintf to print */
-	vprintf(format, args);
+	vprintf(format,args);
 	printf("\n");
+#elif defined(EDM_USING_RTT)
+	rt_kprintf("(%s:%ld) ", file, line);
+	/* must use vprintf to print */
+	rt_kprintf(format,args);
+	rt_kprintf("\n");
+#endif
 	threadMutexUnlock();
 	va_end(args);
 }
@@ -94,7 +101,7 @@ void printThreadInfo(void){
 	printf("tid:%#x ",pthread_self());
 #endif
 #elif defined(EDM_USING_RTT)
-	printf("thread_name:%s ",rt_thread_self()->name);
+	rt_kprintf("thread_name:%s ",rt_thread_self()->name);
 #endif
 
 }
@@ -123,7 +130,7 @@ void printTime(void) {
 #endif
 
 #elif defined(EDM_USING_RTT)
-	printf("tick: %010ld ",rt_tick_get());
+	rt_kprintf("tick: %010ld ",rt_tick_get());
 #endif
 }
 

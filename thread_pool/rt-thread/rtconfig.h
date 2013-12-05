@@ -80,4 +80,25 @@
 #define RT_USING_SMALL_MEM
 /* #define RT_TINY_SIZE */
 
+#define RT_USING_CONSOLE
+
+/* SECTION: Device System */
+/* Using Device System */
+//#define RT_USING_DEVICE
+/* #define RT_USING_UART1 */
+
+/* SECTION: Console options */
+/* the buffer size of console*/
+#define RT_CONSOLEBUF_SIZE	128
+#define RT_CONSOLE_DEVICE_NAME	"sci0"
+
+/* SECTION: component options */
+#define RT_USING_COMPONENTS_INIT
+
+///* SECTION: finsh, a C-Express shell */
+//#define RT_USING_FINSH
+///* Using symbol table */
+//#define FINSH_USING_SYMTAB
+//#define FINSH_USING_DESCRIPTION
+
 #endif
