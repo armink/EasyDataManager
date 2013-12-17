@@ -33,11 +33,11 @@ ThreadPoolErrCode initThreadPool(pThreadPool const pool, uint8_t maxThreadNum) {
 		errorCode = THREAD_POOL_MAX_NUM_ERR;
 	}
 	if (errorCode == THREAD_POOL_NO_ERR) {
-		pool->queueLock = rt_mutex_create("queueLock", RT_IPC_FLAG_PRIO);
+		pool->queueLock = rt_mutex_create("queueLock", RT_IPC_FLAG_FIFO);
 		RT_ASSERT(pool->queueLock != NULL);
-		pool->userLock = rt_mutex_create("userLock", RT_IPC_FLAG_PRIO);
+		pool->userLock = rt_mutex_create("userLock", RT_IPC_FLAG_FIFO);
 		RT_ASSERT(pool->userLock != NULL);
-		pool->queueReady = rt_sem_create("queueReady", 0, RT_IPC_FLAG_PRIO);
+		pool->queueReady = rt_sem_create("queueReady", 0, RT_IPC_FLAG_FIFO);
 		RT_ASSERT(pool->queueReady != NULL);
 		pool->queueHead = NULL;
 		pool->maxThreadNum = maxThreadNum;
@@ -171,7 +171,7 @@ void threadJob(void* arg) {
 		while (pool->curWaitThreadNum == 0 && !pool->isShutdown) {
 			LogD("the thread waiting for task add to task queue");
 			/* ququeReady is NULL,the thread will block */
-			if(rt_sem_trytake(pool->queueReady)){
+			if(pool->queueReady->value == 0){
 				rt_mutex_release(pool->queueLock);
 				rt_sem_take(pool->queueReady, RT_WAITING_FOREVER);
 				rt_mutex_take(pool->queueLock, RT_WAITING_FOREVER);
@@ -196,8 +196,6 @@ void threadJob(void* arg) {
 		free(task);
 		task = NULL;
 	}
-	/* never reach here */
-	return;
 }
 
 /**
