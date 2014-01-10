@@ -53,7 +53,7 @@ ThreadPoolErrCode initThreadPool(pThreadPool const pool, uint8_t maxThreadNum) {
 		for (i = 0; i < maxThreadNum; i++) {
 			name[strlen(name)] = '0' + i;
 			pool->threadID[i] = rt_thread_create(name, threadJob, pool,
-			THREAD_POOL_JOB_STACK_SIZE, THREAD_POOL_JOB_PRIORITY,
+			THREAD_POOL_JOB_STACK_SIZE, THREAD_POOL_JOB_DEFAULT_PRIORITY,
 			THREAD_POOL_JOB_TICK * i);
 			RT_ASSERT(pool->threadID[i] != NULL);
 			rt_thread_startup(pool->threadID[i]);
