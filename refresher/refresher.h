@@ -25,53 +25,43 @@
 #include "rtthread_pool.h"
 #endif
 
+#define REFRESHER_JOB_NAME_MAX     CACHE_NAME_MAX       /**< refresher job max name length */
+
 /* refresher error code */
 typedef enum{
 	REFRESHER_NO_ERR,                 /**< no error */
+	REFRESHER_NO_JOB,                 /**< refresher doesn't have job */
+	REFRESHER_JOB_NAME_ERROR,         /**< job has name error */
 }RefresherErrCode;
-
-/* the job wait mode in refresher */
-typedef enum{
-	JOB_TYPE_BLOCK_RESOURCE,          /**< the job will block by resource */
-	JOB_TYPE_BLOCK_LOGIC_WAIT,        /**< the job will block by some logic wait */
-	JOB_TYPE_NONBLOCK,                /**< the job will not block,so there is no OS delay in job */
-}JobWaitMode;
-
 
 /* RefreshJob is an auto refresh job for a Cache data. */
 typedef struct _RefreshJob{
 	char  name[CACHE_NAME_MAX];         /**< the name of the CacheData is refreshed.@see CacheData */
-	int8_t level;                       /**< refresh level.If level is -1,RefreshJob will stop work */
-	uint8_t period;                     /**< refresh time = period * refresher tick. @see Refresher */
-	uint8_t times;                      /**< job running times.If equal 0,the job will continuous running */
-	JobWaitMode waitMode;               /**< job wait mode @see JobWaitMode */
-	void* (*refreshProcess)(void *arg); /**< it will call when the RefreshJob need wrok */
-	struct _RefreshJob* next;           /**< point to next CacheData */
+	int8_t times;                       /**< job running times.If it is -1,the job will continuous running. */
+	uint8_t priority;                   /**< refresh priority.The highest priority is 0. */
+	uint8_t period;                     /**< refresh time = period * refresher tick. @see Refresher.tickTime */
+	bool_t newThread;                   /**< time-consuming or block job set it true will be better. */
+	rt_thread_t threadID;               /**< job running thread ID */
+	void (*refreshProcess)(void *arg); /**< it will call when the RefreshJob need wrok */
+	struct _RefreshJob* next;           /**< point to next RefreshJob */
 } RefreshJob , *pRefreshJob;
 
 /* Refresher supply functions set and RefreshJob list for app */
 typedef struct _Refresher {
-	RefresherErrCode (*start)(struct _Refresher* const refresher);
-	RefresherErrCode (*stop)(struct _Refresher* const refresher);
 	RefresherErrCode (*add)(struct _Refresher* const refresher, char* name,
-			int8_t level, uint8_t period, uint8_t times, JobWaitMode waitMode,
-			void* (*refreshProcess)(void *arg));
+			int8_t priority, uint8_t period, uint8_t times, bool_t newThread,
+			uint32_t satckSize, void (*refreshProcess)(void *arg));
 	RefresherErrCode (*del)(struct _Refresher* const refresher,
 			const char* name);
-	RefresherErrCode (*setLevel)(struct _Refresher* const refresher, char* name,
-			int8_t level);
-	RefresherErrCode (*setPeriod)(struct _Refresher* const refresher,
-			char* name, uint8_t period);
-	RefresherErrCode (*setProcess)(struct _Refresher* const refresher,
-			char* name, void* (*refreshProcess)(void *arg));
-	RefresherErrCode (*control)(struct _Refresher* const refresher, char* name,
-			int8_t level, uint8_t period, uint8_t times, JobWaitMode waitMode,
-			void* (*refreshProcess)(void *arg));
-	char name[CACHE_NAME_MAX];          /**< the name of Refresher */
-	uint32_t tickTime;                  /**< the Refresher work tick time. unit:Millisecond */
-	pRefreshJob jobWaitHead;            /**< the refresh job queue */
-	pRefreshJob jobReadyHead;           /**< the refresh job queue */
+	RefresherErrCode (*setPeriodAndPriority)(struct _Refresher* const refresher,
+			char* name, uint8_t period, int8_t priority);
+	uint32_t tick;                      /**< the Refresher running tick time. unit:Millisecond */
+	rt_thread_t kernel;                 /**< the Refresher kernel thread ID,running all nonblock job */
+	pRefreshJob queueHead;              /**< the refresh job queue */
+	rt_mutex_t queueLock;               /**< the job queue mutex lock */
 } Refresher, *pRefresher;
 
+RefresherErrCode initRefresher(pRefresher const refresher, uint32_t stackSize,
+		uint8_t priority, uint32_t tick);
 
 #endif /* REFRESHER_H_ */
