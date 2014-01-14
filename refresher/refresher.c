@@ -72,6 +72,34 @@ void kernel(void* arg) {
  */
 void newThreadJob(void* arg){
 	//TODO ÒÀÕÕjobµÄperiod*tickÂÖÑµÖ´ÐÐjob process
+	pRefresher refresher = (pRefresher)arg;
+	rt_thread_t thread = rt_thread_self();
+	pRefreshJob job = NULL;
+	uint32_t startTemp , runningTime ;
+	/* get job object */
+	job = hasJob(refresher,thread->name);
+	assert(job != NULL);
+	while(1){
+		/* backup current system time */
+		startTemp = rt_tick_get();
+		/* If job running times is 0 , the job will stop*/
+		if (job->times != 0) {
+			/* run job refreshProcess */
+			job->refreshProcess(job);
+			/* If job times is -1.Job will be in continuous running mode. */
+			if (job->times != -1) {
+				job->times--;
+			}
+		}
+		/* calculate refreshProcess running time */
+		runningTime = rt_tick_get() - startTemp;
+		/* delay sometime.Make sure job be runned in setting time. */
+		if (runningTime < job->period * refresher->tick) {
+			rt_thread_delay(job->period * refresher->tick - runningTime);
+		} else {/* refreshProcess running time was greater than refresh time.So it's no need delay */
+			rt_thread_delay(0);
+		}
+	}
 }
 
 /**
