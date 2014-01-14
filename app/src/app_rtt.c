@@ -18,6 +18,7 @@
 #include <board.h>
 #include "log.h"
 #include "cache.h"
+#include "refresher.h"
 extern int  rt_application_init(void);
 
 extern rt_uint8_t *heap;
@@ -127,6 +128,17 @@ void testCache(void){
 	cache.pool->destroy(cache.pool);
 }
 
+void tempRefreshProcess(void *arg){
+	LogD("Temp refresh is process");
+}
+
+void testRefresher(){
+	Refresher refresher;
+	initRefresher(&refresher,512,5,50);
+	refresher.add(&refresher,"Temp",10,4,2,FALSE,0,tempRefreshProcess);
+	rt_thread_delay(5000);
+}
+
 //***************************系统监控线程***************************
 //函数定义: void thread_entry_SysRunLed(void* parameter)
 //入口参数：无
@@ -136,8 +148,9 @@ void testCache(void){
 void thread_entry_SysMonitor(void* parameter) {
 	uint8_t i = 0;
 	initLogger(TRUE);
-	testCache();
-	for (i = 0; i < 5; i++) {
+//	testCache();
+	testRefresher();
+	for (i = 0; i < 50; i++) {
 		LogD("hello, world2");
 		rt_thread_delay(1000);
 	}
@@ -151,14 +164,14 @@ int rt_application_init() {
 	ALIGN(RT_ALIGN_SIZE)
 	static rt_uint8_t thread_SysMonitor_stack[512];
 
-	rt_thread_init(&thread_SysMonitor,
-                   "SysMonitor1",
-                   thread_entry_SysMonitor,
-                   RT_NULL,
-                   thread_SysMonitor_stack,
-                   sizeof(thread_SysMonitor_stack),
-				   4,20);
-    rt_thread_startup(&thread_SysMonitor);
+//	rt_thread_init(&thread_SysMonitor,
+//                   "SysMonitor1",
+//                   thread_entry_SysMonitor,
+//                   RT_NULL,
+//                   thread_SysMonitor_stack,
+//                   sizeof(thread_SysMonitor_stack),
+//				   4,20);
+//    rt_thread_startup(&thread_SysMonitor);
 
 	rt_thread_t tid;
 	tid = rt_thread_create("SysMonitor2", thread_entry_SysMonitor, RT_NULL, 2048,
