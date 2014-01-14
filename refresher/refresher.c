@@ -16,6 +16,8 @@ static RefresherErrCode del(pRefresher const refresher, const char* name);
 static RefresherErrCode setPeriodAndPriority(pRefresher const refresher,
 		char* name, uint8_t period, int8_t priority);
 static void kernel(void* arg);
+static pRefreshJob hasJob(pRefresher const refresher, char* name);
+static void newThreadJob(void* arg);
 
 /**
  * initialize the refresher
@@ -40,10 +42,10 @@ RefresherErrCode initRefresher(pRefresher const refresher, uint32_t stackSize,
 	refresher->queueLock = rt_mutex_create("refresher", RT_IPC_FLAG_FIFO);
 	assert(refresher->queueLock != NULL);
 	/* create and start kernel thread */
-	refresher->kernel = rt_thread_create("refresher", kernel, refresher,
+	refresher->kernelID = rt_thread_create("refresher", kernel, refresher,
 			stackSize, priority, tick);
-	assert(refresher->kernel != NULL);
-	rt_thread_startup(refresher->kernel);
+	assert(refresher->kernelID != NULL);
+	rt_thread_startup(refresher->kernelID);
 	LogD("initialize refresher success");
 	return errorCode;
 }
@@ -53,9 +55,46 @@ RefresherErrCode initRefresher(pRefresher const refresher, uint32_t stackSize,
  *
  * @param arg the kernel arguments
  *
+ * @see newThreadJob
+ *
  */
 void kernel(void* arg) {
 	//TODO tick轮训延时处理、循环执行任务队列上的任务、注意刷新级别
+}
+
+/**
+ * the newThread job will use this thread
+ *
+ * @param arg the job arguments
+ *
+ * @see kernel
+ *
+ */
+void newThreadJob(void* arg){
+	//TODO 依照job的period*tick轮训执行job process
+}
+
+/**
+ * find the job in refresher's job queue
+ *
+ * @param refresher the refresher pointer
+ * @param name job name
+ *
+ * @return job pointer when find success
+ */
+pRefreshJob hasJob(pRefresher const refresher, char* name) {
+	pRefreshJob member = refresher->queueHead;
+	assert((name != NULL) && (strlen(name) <= REFRESHER_JOB_NAME_MAX));
+	for (;;) {
+		if (!strcmp(member->name, name)) {
+			return member;
+		} else {
+			if (member->next == NULL) {/* queue tail */
+				return NULL;
+			}
+			member = member->next;
+		}
+	}
 }
 
 /**
@@ -80,46 +119,113 @@ RefresherErrCode add(pRefresher const refresher, char* name, int8_t priority,
 	pRefreshJob newJob = NULL;
 
 	assert(refresher != NULL);
-	assert((name != NULL) && (strlen(name) <= REFRESHER_JOB_NAME_MAX));
 
-	newJob = (pRefreshJob) malloc(sizeof(Refresher));
-	assert(newJob != NULL);
-
-	newJob->priority = priority;
-	newJob->period = period;
-	newJob->times = times;
-	newJob->newThread = newThread;
-	newJob->refreshProcess = refreshProcess;
-	newJob->next = NULL;
-
-	if (newThread) {/* the job need new thread to run */
-		newJob->threadID = rt_thread_create(name, refreshProcess,
-				refresher, satckSize, priority, refresher->tick);
-		assert(newJob->threadID);
-	} else {/* the job running kernel thread */
-		newJob->threadID = refresher->kernel;
-	}
-	/* lock job queue */
-	rt_mutex_take(refresher->queueLock, RT_WAITING_FOREVER);
-	member = refresher->queueHead;
-	if (member == NULL) {/* job queue is NULL */
-		refresher->queueHead = newJob;
+	if (hasJob(refresher, name) != NULL) {/* the job is already exist in job queue */
+		LogD("the name of %s job is already exist in refresher", name);
+		errorCode = REFRESHER_JOB_NAME_ERROR;
 	} else {
-		/* look up for queue tail */
-		while (member->next != NULL) {
-			member = member->next;
-		}
-		member->next = newJob;
+		newJob = (pRefreshJob) malloc(sizeof(Refresher));
+		assert(newJob != NULL);
+		strcpy(newJob->name, name);
 	}
-	rt_mutex_release(refresher->queueLock);
 
-	LogD("add a job to refresher success.");
+	if (errorCode == REFRESHER_NO_ERR) {
+		newJob->priority = priority;
+		newJob->period = period;
+		newJob->times = times;
+		newJob->newThread = newThread;
+		newJob->refreshProcess = refreshProcess;
+		newJob->next = NULL;
+
+		if (newThread) {/* the job need new thread to run */
+			newJob->threadID = rt_thread_create(name, newThreadJob, refresher,
+					satckSize, priority, refresher->tick);
+			assert(newJob->threadID);
+		} else {/* the job running kernel thread */
+			newJob->threadID = refresher->kernelID;
+		}
+		/* lock job queue */
+		rt_mutex_take(refresher->queueLock, RT_WAITING_FOREVER);
+		member = refresher->queueHead;
+		if (member == NULL) {/* job queue is NULL */
+			refresher->queueHead = newJob;
+		} else {
+			/* look up for queue tail */
+			while (member->next != NULL) {
+				member = member->next;
+			}
+			member->next = newJob;
+		}
+		rt_mutex_release(refresher->queueLock);
+		LogD("add a job to refresher success.");
+	}
+
 	return errorCode;
 }
 
+/**
+ * delete a job in refresher
+ *
+ * @param refresher the refresher pointer
+ * @param name job name
+ *
+ * @return error code
+ */
 RefresherErrCode del(pRefresher const refresher, const char* name){
 	RefresherErrCode errorCode = REFRESHER_NO_ERR;
+	pRefreshJob member = refresher->queueHead;
+	pRefreshJob memberTemp = NULL;
 
+	assert(refresher != NULL);
+	/* job queue doesn' have job */
+	if (member == NULL) {
+		errorCode = REFRESHER_NO_JOB;
+	}
+	/* find the job in job queue */
+	if (errorCode == REFRESHER_NO_ERR) {
+		if (strcmp(member->name, name)) { /* queue head */
+			for (;;) {
+				if (member->next == NULL) { /* queue tail */
+					errorCode = REFRESHER_JOB_NAME_ERROR;
+					break;
+				} else {
+					if (!strcmp(member->next->name, name)) {
+						/* the delete object is member->next */
+						break;
+					} else {
+						member = member->next;
+					}
+				}
+			}
+		}
+	}
+	/* delete job and free ram */
+	if (errorCode == REFRESHER_NO_ERR) {
+		if (member == refresher->queueHead) {/* delete job is queue head */
+			/* the job queue has one node */
+			if (member->next == NULL) {
+				refresher->queueHead = NULL; /* job will be freed in the end */
+			} else { /* the job queue has more than one node*/
+				refresher->queueHead = refresher->queueHead->next; /* job will be freed in the end */
+			}
+		} else if (member->next->next == NULL) {/* delete job is tail node */
+			memberTemp = member->next;
+			member->next = NULL;
+			member = memberTemp; /* job will be freed in the end */
+		} else {
+			memberTemp = member->next;
+			member->next = member->next->next;
+			member = memberTemp; /* job will be freed in the end */
+		}
+		/* the new thread job will detach thread in OS */
+		if (member->newThread) {
+			rt_thread_detach(member->threadID);
+		}
+		free(member);
+		member = NULL;
+	} else {
+		errorCode = REFRESHER_JOB_NAME_ERROR;
+	}
 	return errorCode;
 }
 
@@ -139,24 +245,22 @@ RefresherErrCode setPeriodAndPriority(pRefresher const refresher, char* name,
 	pRefreshJob member = refresher->queueHead;
 
 	assert(refresher != NULL);
-	assert((name != NULL) && (strlen(name) <= REFRESHER_JOB_NAME_MAX));
-	/* refresher doesn' have job */
+	/* job queue doesn' have job */
 	if (member == NULL) {
 		errorCode = REFRESHER_NO_JOB;
 	}
 
 	if (errorCode == REFRESHER_NO_ERR) {
-		for (;;) {
-			if (!strcmp(member->name, name)) {
-				member->period = period;
-				member->priority = priority;
-				break;
-			} else {
-				if (member->next == NULL) {/* list tail */
-					errorCode = REFRESHER_JOB_NAME_ERROR;
-				}
-				member = member->next;
+		if ((member = hasJob(refresher, name)) != NULL) {
+			member->period = period;
+			member->priority = priority;
+			/* the new thread job will change thread priority */
+			if (member->newThread) {
+				rt_thread_control(member->threadID,
+						RT_THREAD_CTRL_CHANGE_PRIORITY, &member->priority);
 			}
+		} else {
+			errorCode = REFRESHER_JOB_NAME_ERROR;
 		}
 	}
 

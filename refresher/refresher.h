@@ -56,7 +56,7 @@ typedef struct _Refresher {
 	RefresherErrCode (*setPeriodAndPriority)(struct _Refresher* const refresher,
 			char* name, uint8_t period, int8_t priority);
 	uint32_t tick;                      /**< the Refresher running tick time. unit:Millisecond */
-	rt_thread_t kernel;                 /**< the Refresher kernel thread ID,running all nonblock job */
+	rt_thread_t kernelID;               /**< the Refresher kernel thread ID,running all nonblock job */
 	pRefreshJob queueHead;              /**< the refresh job queue */
 	rt_mutex_t queueLock;               /**< the job queue mutex lock */
 } Refresher, *pRefresher;
