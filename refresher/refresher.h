@@ -25,7 +25,8 @@
 #include "rtthread_pool.h"
 #endif
 
-#define REFRESHER_JOB_NAME_MAX     CACHE_NAME_MAX       /**< refresher job max name length */
+#define REFRESHER_JOB_NAME_MAX        CACHE_NAME_MAX   /**< refresher job max name length */
+#define REFRESHER_JOB_CONTINUES_RUN               -1   /**< If priority is -1.The job will continuous running. */
 
 /* refresher error code */
 typedef enum{
@@ -42,9 +43,16 @@ typedef struct _RefreshJob{
 	uint8_t period;                     /**< refresh time = period * refresher tick. @see Refresher.tickTime */
 	bool_t newThread;                   /**< time-consuming or block job set it true will be better. */
 	rt_thread_t threadID;               /**< job running thread ID */
-	void (*refreshProcess)(void *arg); /**< it will call when the RefreshJob need wrok */
+	void (*refreshProcess)(void *arg);  /**< it will call when the RefreshJob need wrok */
 	struct _RefreshJob* next;           /**< point to next RefreshJob */
 } RefreshJob , *pRefreshJob;
+
+/* Refresher ready job in ready queue */
+typedef struct _ReadyJob{
+	pRefreshJob job;                    /**< RefreshJob pointer @see RefreshJob */
+	uint8_t curPeriod;                  /**< current left period @see RefreshJob.period */
+	struct _ReadyJob* next;             /**< point to next ReadyJob */
+} ReadyJob, *pReadyJob;
 
 /* Refresher supply functions set and RefreshJob list for app */
 typedef struct _Refresher {
@@ -58,7 +66,8 @@ typedef struct _Refresher {
 	uint32_t tick;                      /**< the Refresher running tick time. unit:Millisecond */
 	rt_thread_t kernelID;               /**< the Refresher kernel thread ID,running all nonblock job */
 	pRefreshJob queueHead;              /**< the refresh job queue */
-	rt_mutex_t queueLock;               /**< the job queue mutex lock */
+	pReadyJob readyQueueHead;           /**< the ready job queue */
+	rt_mutex_t queueLock;               /**< The job queue mutex lock.Just write queue lock. */
 } Refresher, *pRefresher;
 
 RefresherErrCode initRefresher(pRefresher const refresher, uint32_t stackSize,
