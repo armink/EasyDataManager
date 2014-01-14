@@ -63,7 +63,6 @@ RefresherErrCode initRefresher(pRefresher const refresher, uint32_t stackSize,
 void kernel(void* arg) {
 	pRefresher refresher = (pRefresher)arg;
 	pRefreshJob job = NULL ;
-	pReadyJob readyJob = NULL;
 	uint32_t startTime , runningTime ;
 	while(1){
 		startTime = rt_tick_get();
@@ -185,7 +184,7 @@ pRefreshJob selectJobFromReadyQueue(pRefresher const refresher) {
 					readyJob->next = NULL;
 					readyJob = readyJobTemp; /* job will be freed in the end */
 				} else {
-					eadyJobTemp = readyJob->next;
+					readyJobTemp = readyJob->next;
 					readyJob->next = readyJob->next->next;
 					readyJob = readyJobTemp; /* job will be freed in the end */
 				}
