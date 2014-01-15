@@ -35,10 +35,16 @@ typedef enum{
 	REFRESHER_JOB_NAME_ERROR,         /**< job has name error */
 }RefresherErrCode;
 
+/* job queue type */
+typedef enum{
+	JOB_GENERAL_QUEUE,                   /**< the job general queue */
+	JOB_READY_QUEUE,                     /**< the job ready queue */
+}JobQueueType;
+
 /* RefreshJob is an auto refresh job for a Cache data. */
 typedef struct _RefreshJob{
 	char  name[CACHE_NAME_MAX];         /**< the name of the CacheData is refreshed.@see CacheData */
-	int8_t times;                       /**< job running times.If it is -1,the job will continuous running. */
+	int16_t times;                      /**< job running times.If it is -1,the job will continuous running. */
 	uint8_t priority;                   /**< refresh priority.The highest priority is 0. */
 	uint8_t period;                     /**< refresh time = period * refresher tick. @see Refresher.tickTime */
 	bool_t newThread;                   /**< time-consuming or block job set it true will be better. */
@@ -57,12 +63,14 @@ typedef struct _ReadyJob{
 /* Refresher supply functions set and RefreshJob list for app */
 typedef struct _Refresher {
 	RefresherErrCode (*add)(struct _Refresher* const refresher, char* name,
-			int8_t priority, uint8_t period, uint8_t times, bool_t newThread,
+			int8_t priority, uint8_t period, int16_t times, bool_t newThread,
 			uint32_t satckSize, void (*refreshProcess)(void *arg));
 	RefresherErrCode (*del)(struct _Refresher* const refresher,
 			const char* name);
 	RefresherErrCode (*setPeriodAndPriority)(struct _Refresher* const refresher,
 			char* name, uint8_t period, int8_t priority);
+	RefresherErrCode (*setTimes)(struct _Refresher* const refresher, char* name,
+			int16_t times);
 	uint32_t tick;                      /**< the Refresher running tick time. unit:Millisecond */
 	rt_thread_t kernelID;               /**< the Refresher kernel thread ID,running all nonblock job */
 	pRefreshJob queueHead;              /**< the refresh job queue */

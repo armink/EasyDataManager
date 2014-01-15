@@ -141,10 +141,15 @@ void pressureRefreshProcess(void *arg){
 void testRefresher(){
 	Refresher refresher;
 	initRefresher(&refresher,512,5,50);
-	refresher.add(&refresher,"Temp",8,2,4,FALSE,512,tempRefreshProcess);
-	refresher.add(&refresher,"Pressure",10,4,4,FALSE,512,pressureRefreshProcess);
+	refresher.add(&refresher,"Temp",8,2,-1,FALSE,512,tempRefreshProcess);
+	refresher.add(&refresher,"Pressure",10,4,-1,FALSE,512,pressureRefreshProcess);
 	refresher.add(&refresher,"Temp",8,2,4,TRUE,512,tempRefreshProcess);
 	refresher.add(&refresher,"Pressure",10,4,4,TRUE,512,pressureRefreshProcess);
+	rt_thread_delay(2000);
+	refresher.setPeriodAndPriority(&refresher,"Pressure",1,1);
+	rt_thread_delay(2000);
+	refresher.setTimes(&refresher,"Pressure",0);
+	refresher.del(&refresher,"Pressure");
 	rt_thread_delay(5000);
 }
 
