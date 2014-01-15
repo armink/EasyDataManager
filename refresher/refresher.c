@@ -211,13 +211,17 @@ pRefreshJob selectJobFromReadyQueue(pRefresher const refresher) {
 				free(readyJob);
 				readyJob = NULL;
 				return NULL;
-			}else if (job->times > 0){
+			} else if (job->times > 0) {
 				/* lock job queue */
 				rt_mutex_take(refresher->queueLock, RT_WAITING_FOREVER);
 				/* decrease job running times. */
-				job->times --;
+				job->times--;
 				/* unlock job queue */
 				rt_mutex_release(refresher->queueLock);
+				/* Restore the period for this ready job. */
+				readyJobTemp->curPeriod = job->period;
+				return job;
+			} else if (job->times == REFRESHER_JOB_CONTINUES_RUN) {
 				/* Restore the period for this ready job. */
 				readyJobTemp->curPeriod = job->period;
 				return job;

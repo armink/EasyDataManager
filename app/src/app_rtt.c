@@ -132,10 +132,14 @@ void tempRefreshProcess(void *arg){
 	LogD("Temp refresh is process");
 }
 
+void pressureRefreshProcess(void *arg){
+	LogD("Pressure refresh is process");
+}
+
 void testRefresher(){
 	Refresher refresher;
 	initRefresher(&refresher,512,5,50);
-	refresher.add(&refresher,"Temp",10,4,2,FALSE,0,tempRefreshProcess);
+	refresher.add(&refresher,"Temp",10,2,-1,FALSE,0,tempRefreshProcess);
 	rt_thread_delay(5000);
 }
 
@@ -150,7 +154,7 @@ void thread_entry_SysMonitor(void* parameter) {
 	initLogger(TRUE);
 //	testCache();
 	testRefresher();
-	for (i = 0; i < 50; i++) {
+	for (i = 0; i < 10; i++) {
 		LogD("hello, world2");
 		rt_thread_delay(1000);
 	}
