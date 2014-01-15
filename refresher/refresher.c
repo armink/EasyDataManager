@@ -85,7 +85,6 @@ void kernel(void* arg) {
 		}
 		/* calculate refreshProcess running time */
 		runningTime = rt_tick_get() - startTime;
-		LogD("refresher kernel is running.The refreshProcess running time is %d",runningTime);
 		/* delay sometime.Make sure kernel be runned in a tick time. */
 		if (runningTime < refresher->tick) {
 			rt_thread_delay(refresher->tick - runningTime);
@@ -361,6 +360,7 @@ RefresherErrCode add(pRefresher const refresher, char* name, int8_t priority,
 			newJob->threadID = rt_thread_create(name, newThreadJob, refresher,
 					satckSize, priority, refresher->tick);
 			assert(newJob->threadID);
+			rt_thread_startup(newJob->threadID);
 		} else {/* the job running kernel thread */
 			newJob->threadID = refresher->kernelID;
 		}

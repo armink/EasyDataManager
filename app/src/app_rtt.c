@@ -130,17 +130,21 @@ void testCache(void){
 
 void tempRefreshProcess(void *arg){
 	LogD("Temp refresh is process");
+	rt_thread_delay(13);
 }
 
 void pressureRefreshProcess(void *arg){
 	LogD("Pressure refresh is process");
+	rt_thread_delay(50);
 }
 
 void testRefresher(){
 	Refresher refresher;
 	initRefresher(&refresher,512,5,50);
-	refresher.add(&refresher,"Temp",8,2,-1,FALSE,0,tempRefreshProcess);
-	refresher.add(&refresher,"pressure",10,4,-1,FALSE,0,pressureRefreshProcess);
+	refresher.add(&refresher,"Temp",8,2,4,FALSE,512,tempRefreshProcess);
+	refresher.add(&refresher,"Pressure",10,4,4,FALSE,512,pressureRefreshProcess);
+	refresher.add(&refresher,"Temp",8,2,4,TRUE,512,tempRefreshProcess);
+	refresher.add(&refresher,"Pressure",10,4,4,TRUE,512,pressureRefreshProcess);
 	rt_thread_delay(5000);
 }
 
