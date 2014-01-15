@@ -148,8 +148,9 @@ void testRefresher(){
 	rt_thread_delay(2000);
 	refresher.setPeriodAndPriority(&refresher,"Pressure",1,1);
 	rt_thread_delay(2000);
-	refresher.setTimes(&refresher,"Pressure",0);
-	refresher.del(&refresher,"Pressure");
+	LogD("will setTimes");
+	refresher.setTimes(&refresher,"Pressure",1);
+	refresher.del(&refresher,"Temp");
 	rt_thread_delay(5000);
 }
 

@@ -22,8 +22,10 @@ static pRefreshJob hasJob(pRefresher const refresher, char* name);
 static void newThreadJob(void* arg);
 static void addReadyJobToQueue(pRefresher const refresher);
 static pRefreshJob selectJobFromReadyQueue(pRefresher const refresher);
-static RefresherErrCode delJobInOneQueue(pRefresher const refresher,
-		const char* name, JobQueueType queueType);
+static RefresherErrCode delJobInRefreshQueue(pRefresher const refresher,
+		const char* name);
+static RefresherErrCode delJobInReadyQueue(pRefresher const refresher,
+		const char* name);
 
 /**
  * initialize the refresher
@@ -100,8 +102,7 @@ void kernel(void* arg) {
 }
 
 /**
- * Search and add ready job to ready queue.It's used in kernel thread.
- * So it isn't need thread safety.
+ * Search and add ready job to ready queue.
  *
  * @param refresher the refresher pointer
  *
@@ -148,11 +149,12 @@ void addReadyJobToQueue(pRefresher const refresher) {
 			}
 			/* Found ready queue finish.If job not found in ready queue,add it. */
 			if (readyJob == NULL) {
-				//TODO 加锁，去除线程安全字样
 				/* get tail ready job */
 				readyJob = readyJobTemp;
 				readyJobTemp = (pReadyJob) malloc(sizeof(ReadyJob));
 				assert(readyJobTemp != NULL);
+				/* lock job queue */
+				rt_mutex_take(refresher->queueLock, RT_WAITING_FOREVER);
 				if (refresher->readyQueueHead == NULL) { /* ready job queue head */
 					refresher->readyQueueHead = readyJobTemp;
 				} else {
@@ -162,6 +164,8 @@ void addReadyJobToQueue(pRefresher const refresher) {
 				readyJob->job = job;
 				readyJob->curPeriod = job->period;
 				readyJob->next = NULL;
+				/* unlock job queue */
+				rt_mutex_release(refresher->queueLock);
 			}
 		}
 		job = job->next;
@@ -170,7 +174,6 @@ void addReadyJobToQueue(pRefresher const refresher) {
 
 /**
  * Select a job form ready job queue.Next this job will be run.
- * It's used in kernel thread.So it isn't need thread safety.
  *
  * @param refresher the refresher pointer
  *
@@ -203,7 +206,8 @@ pRefreshJob selectJobFromReadyQueue(pRefresher const refresher) {
 						}
 					}
 				}
-				//TODO 加锁，去除线程安全字样
+				/* lock job queue */
+				rt_mutex_take(refresher->queueLock, RT_WAITING_FOREVER);
 				/* delete job */
 				if (readyJob == refresher->readyQueueHead) {/* queue head */
 					if (readyJob->next == NULL) { /* queue has one node */
@@ -223,6 +227,8 @@ pRefreshJob selectJobFromReadyQueue(pRefresher const refresher) {
 					readyJob->next = readyJob->next->next;
 					readyJob = readyJobTemp; /* job will be freed in the end */
 				}
+				/* unlock job queue */
+				rt_mutex_release(refresher->queueLock);
 				free(readyJob);
 				readyJob = NULL;
 				return NULL;
@@ -395,31 +401,19 @@ RefresherErrCode add(pRefresher const refresher, char* name, int8_t priority,
 }
 
 /**
- * delete a job in refresher.@note only in ready queue or general queue
+ * delete a job in refresh queue
  *
  * @param refresher the refresher pointer
  * @param name job name
- * @param queueType the type of queue @see JobQueueType
  *
  * @return error code
  */
-RefresherErrCode delJobInOneQueue(pRefresher const refresher, const char* name,
-		JobQueueType queueType) {
+RefresherErrCode delJobInRefreshQueue(pRefresher const refresher, const char* name) {
 	RefresherErrCode errorCode = REFRESHER_NO_ERR;
-	pRefreshJob member = NULL, memberTemp = NULL;
-	pRefreshJob* queueHead = NULL;
+	pRefreshJob member = refresher->queueHead, memberTemp = NULL;
 
 	assert(refresher != NULL);
 	assert((name != NULL) && (strlen(name) <= REFRESHER_JOB_NAME_MAX));
-	assert((queueType == JOB_GENERAL_QUEUE) || (queueType == JOB_READY_QUEUE));
-
-	/* select queue head */
-	if (queueType == JOB_GENERAL_QUEUE){
-		queueHead = &(refresher->queueHead);
-	}else if (queueType == JOB_READY_QUEUE){
-		queueHead = &(refresher->readyQueueHead);
-	}
-	member = queueHead;
 
 	/* job queue doesn' have job */
 	if (member == NULL) {
@@ -450,13 +444,13 @@ RefresherErrCode delJobInOneQueue(pRefresher const refresher, const char* name,
 	rt_mutex_take(refresher->queueLock, RT_WAITING_FOREVER);
 	/* delete job and free ram */
 	if (errorCode == REFRESHER_NO_ERR) {
-		if (member == *queueHead) {/* delete job is queue head */
+		if (member == refresher->queueHead) {/* delete job is queue head */
 			/* the job queue has one node */
 			if (member->next == NULL) {
-				*queueHead = NULL;
+				refresher->queueHead= NULL;
 				/* job will be freed in the end */
 			} else { /* the job queue has more than one node*/
-				*queueHead = (*queueHead)->next;
+				refresher->queueHead = refresher->queueHead->next;
 				/* job will be freed in the end */
 			}
 		} else if (member->next == NULL) {/* delete job is tail node */
@@ -479,6 +473,75 @@ RefresherErrCode delJobInOneQueue(pRefresher const refresher, const char* name,
 }
 
 /**
+ * delete a job in ready queue
+ *
+ * @param refresher the refresher pointer
+ * @param name job name
+ *
+ * @return error code
+ */
+RefresherErrCode delJobInReadyQueue(pRefresher const refresher, const char* name) {
+	RefresherErrCode errorCode = REFRESHER_NO_ERR;
+	pReadyJob member = refresher->readyQueueHead, memberTemp = NULL;
+
+	assert(refresher != NULL);
+	assert((name != NULL) && (strlen(name) <= REFRESHER_JOB_NAME_MAX));
+
+	/* job queue doesn' have job */
+	if (member == NULL) {
+		errorCode = REFRESHER_NO_JOB;
+	}
+	/* find the job in job queue */
+	if (errorCode == REFRESHER_NO_ERR) {
+		if (strcmp(member->job->name, name)) { /* queue head */
+			for (;;) {
+				if (member->next == NULL) { /* find finish */
+					errorCode = REFRESHER_JOB_NAME_ERROR;
+					break;
+				} else {
+					if (!strcmp(member->next->job->name, name)) {
+						/* backup last node */
+						memberTemp = member;
+						/* the delete object is member->next */
+						member = member->next;
+						break;
+					} else {
+						member = member->next;
+					}
+				}
+			}
+		}
+	}
+	/* lock job queue */
+	rt_mutex_take(refresher->queueLock, RT_WAITING_FOREVER);
+	/* delete job and free ram */
+	if (errorCode == REFRESHER_NO_ERR) {
+		if (member == refresher->readyQueueHead) {/* delete job is queue head */
+			/* the job queue has one node */
+			if (member->next == NULL) {
+				refresher->readyQueueHead = NULL;
+				/* job will be freed in the end */
+			} else { /* the job queue has more than one node*/
+				refresher->readyQueueHead = refresher->readyQueueHead->next;
+				/* job will be freed in the end */
+			}
+		} else if (member->next == NULL) {/* delete job is tail node */
+			memberTemp->next = NULL; /* job will be freed in the end */
+		} else {
+			memberTemp->next = memberTemp->next->next; /* job will be freed in the end */
+		}
+		free(member);
+		member = NULL;
+	} else {
+		errorCode = REFRESHER_JOB_NAME_ERROR;
+	}
+	/* unlock job queue */
+	rt_mutex_release(refresher->queueLock);
+	return errorCode;
+}
+
+
+/**
  * delete a job in refresher.@see delJobInOneQueue
  *
  * @param refresher the refresher pointer
@@ -489,9 +552,9 @@ RefresherErrCode delJobInOneQueue(pRefresher const refresher, const char* name,
  */
 static RefresherErrCode del(pRefresher const refresher, const char* name){
 	RefresherErrCode errorCode = REFRESHER_NO_ERR;
-	errorCode = delJobInOneQueue(refresher,name,JOB_GENERAL_QUEUE);
-	if (errorCode == REFRESHER_NO_ERR){
-		delJobInOneQueue(refresher,name,JOB_READY_QUEUE);
+	errorCode = delJobInRefreshQueue(refresher, name);
+	if (errorCode == REFRESHER_NO_ERR) {
+		delJobInReadyQueue(refresher, name);
 	}
 	return errorCode;
 }
@@ -553,6 +616,7 @@ RefresherErrCode setTimes(pRefresher const refresher, char* name, int16_t times)
 	RefresherErrCode errorCode = REFRESHER_NO_ERR;
 	pRefreshJob member = refresher->queueHead;
 
+	//TODO 在就绪队列中任务times如果由-1变为其他数值还需要考虑如何实现
 	assert(refresher != NULL);
 	assert((times >= 0) || (times == -1));
 

@@ -35,12 +35,6 @@ typedef enum{
 	REFRESHER_JOB_NAME_ERROR,         /**< job has name error */
 }RefresherErrCode;
 
-/* job queue type */
-typedef enum{
-	JOB_GENERAL_QUEUE,                   /**< the job general queue */
-	JOB_READY_QUEUE,                     /**< the job ready queue */
-}JobQueueType;
-
 /* RefreshJob is an auto refresh job for a Cache data. */
 typedef struct _RefreshJob{
 	char  name[CACHE_NAME_MAX];         /**< the name of the CacheData is refreshed.@see CacheData */
