@@ -139,7 +139,8 @@ void pressureRefreshProcess(void *arg){
 void testRefresher(){
 	Refresher refresher;
 	initRefresher(&refresher,512,5,50);
-	refresher.add(&refresher,"Temp",10,2,-1,FALSE,0,tempRefreshProcess);
+	refresher.add(&refresher,"Temp",8,2,-1,FALSE,0,tempRefreshProcess);
+	refresher.add(&refresher,"pressure",10,4,-1,FALSE,0,pressureRefreshProcess);
 	rt_thread_delay(5000);
 }
 

@@ -127,27 +127,35 @@ void addReadyJobToQueue(pRefresher const refresher) {
 		if (job == NULL) {/* job find finish */
 			break;
 		} else if ((job->newThread == FALSE) && (job->times != 0)) {
-			for (;;) {
-				if (readyJob == NULL) {/* Find finish.This job isn't in the ready queue.Add it. */
-					readyJobTemp = (pReadyJob) malloc(sizeof(ReadyJob));
-					assert(readyJobTemp != NULL);
-					if (refresher->readyQueueHead == NULL) { /* ready job queue head */
-						refresher->readyQueueHead = readyJobTemp;
-					} else {
-						readyJob->next = readyJobTemp;
-					}
-					readyJob = readyJobTemp;
-					readyJob->job = job;
-					readyJob->curPeriod = job->period;
-					readyJob->next = NULL;
-					break;
-				} else {
+			/* If ready job queue is NULL,then add this job to queue immediately.  */
+			if (refresher->readyQueueHead != NULL) {
+				for (;;) {
 					/* The ready queue has this job.It isn't need to add.*/
-					if (!strcmp(readyJob->job->name, job->name)) {
+					if (readyJob == NULL) {/* Find finish.This job isn't in the ready queue.Add it. */
 						break;
+					} else if (!strcmp(readyJob->job->name, job->name)) { /* find success */
+						break;
+					} else {
+						readyJobTemp = readyJob; /* backup ready job */
+						readyJob = readyJob->next;
 					}
-					readyJob = readyJob->next;
 				}
+			}
+			/* Found ready queue finish.If job not found in ready queue,add it. */
+			if (readyJob == NULL) {
+				/* get tail ready job */
+				readyJob = readyJobTemp;
+				readyJobTemp = (pReadyJob) malloc(sizeof(ReadyJob));
+				assert(readyJobTemp != NULL);
+				if (refresher->readyQueueHead == NULL) { /* ready job queue head */
+					refresher->readyQueueHead = readyJobTemp;
+				} else {
+					readyJob->next = readyJobTemp;
+				}
+				readyJob = readyJobTemp;
+				readyJob->job = job;
+				readyJob->curPeriod = job->period;
+				readyJob->next = NULL;
 			}
 		}
 		job = job->next;
