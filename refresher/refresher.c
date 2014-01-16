@@ -33,7 +33,7 @@ static RefresherErrCode delJobInReadyQueue(pRefresher const refresher,
  * @param refresher the refresher pointer
  * @param stackSize the refresher kernel thread size
  * @param priority the refresher kernel thread priority
- * @param tick the refresher kernel thread stack tick
+ * @param tick the refresher kernel thread tick
  *
  * @return error code
  */
@@ -67,7 +67,6 @@ RefresherErrCode initRefresher(pRefresher const refresher, uint32_t stackSize,
  * @param arg the kernel arguments
  *
  * @see newThreadJob
- *
  */
 void kernel(void* arg) {
 	pRefresher refresher = (pRefresher)arg;
@@ -116,17 +115,20 @@ void addReadyJobToQueue(pRefresher const refresher) {
 	if (refresher->queueHead == NULL){
 		return ;
 	}
+	/* lock job queue */
 	/* decrease all ready job curPeriod */
+	rt_mutex_take(refresher->queueLock, RT_WAITING_FOREVER);
 	for(;;){
 		/* job find finish */
 		if (readyJob == NULL){
 			break;
 		}else{
-			//TODO 加锁，去除线程安全字样
 			readyJob->curPeriod--;
 			readyJob = readyJob->next;
 		}
 	}
+	/* unlock job queue */
+	rt_mutex_release(refresher->queueLock);
 	readyJob = refresher->readyQueueHead;
 	/* search and add ready job to ready queue */
 	for (;;) {
@@ -266,7 +268,6 @@ pRefreshJob selectJobFromReadyQueue(pRefresher const refresher) {
  * @param arg the job arguments
  *
  * @see kernel
- *
  */
 void newThreadJob(void* arg) {
 	pRefresher refresher = (pRefresher) arg;
@@ -331,7 +332,7 @@ pRefreshJob hasJob(pRefresher const refresher, char* name) {
 }
 
 /**
- *	add a job to refresher
+ * add a job to refresher
  *
  * @param refresher the refresher pointer
  * @param name job name
@@ -407,6 +408,8 @@ RefresherErrCode add(pRefresher const refresher, char* name, int8_t priority,
  * @param name job name
  *
  * @return error code
+ *
+ * @see delJobInReadyQueue
  */
 RefresherErrCode delJobInRefreshQueue(pRefresher const refresher, const char* name) {
 	RefresherErrCode errorCode = REFRESHER_NO_ERR;
@@ -473,12 +476,14 @@ RefresherErrCode delJobInRefreshQueue(pRefresher const refresher, const char* na
 }
 
 /**
- * delete a job in ready queue
+ * Delete a job in ready queue.It will stop job then delete job.
  *
  * @param refresher the refresher pointer
  * @param name job name
  *
  * @return error code
+ *
+ * @see delJobInRefreshQueue
  */
 RefresherErrCode delJobInReadyQueue(pRefresher const refresher, const char* name) {
 	RefresherErrCode errorCode = REFRESHER_NO_ERR;
@@ -530,6 +535,8 @@ RefresherErrCode delJobInReadyQueue(pRefresher const refresher, const char* name
 		} else {
 			memberTemp->next = memberTemp->next->next; /* job will be freed in the end */
 		}
+		/* make job stop and free it in ready queue */
+		member->job->times = 0;
 		free(member);
 		member = NULL;
 	} else {
@@ -542,19 +549,18 @@ RefresherErrCode delJobInReadyQueue(pRefresher const refresher, const char* name
 
 
 /**
- * delete a job in refresher.@see delJobInOneQueue
+ * delete a job in refresher.@see delJobInReadyQueue @see delJobInRefreshQueue
  *
  * @param refresher the refresher pointer
  * @param name job name
  *
  * @return error code
- *
  */
 static RefresherErrCode del(pRefresher const refresher, const char* name){
 	RefresherErrCode errorCode = REFRESHER_NO_ERR;
-	errorCode = delJobInRefreshQueue(refresher, name);
+	errorCode = delJobInReadyQueue(refresher, name);
 	if (errorCode == REFRESHER_NO_ERR) {
-		delJobInReadyQueue(refresher, name);
+		delJobInRefreshQueue(refresher, name);
 	}
 	return errorCode;
 }
@@ -616,7 +622,6 @@ RefresherErrCode setTimes(pRefresher const refresher, char* name, int16_t times)
 	RefresherErrCode errorCode = REFRESHER_NO_ERR;
 	pRefreshJob member = refresher->queueHead;
 
-	//TODO 在就绪队列中任务times如果由-1变为其他数值还需要考虑如何实现
 	assert(refresher != NULL);
 	assert((times >= 0) || (times == -1));
 

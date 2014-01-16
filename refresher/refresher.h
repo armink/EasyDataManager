@@ -56,13 +56,55 @@ typedef struct _ReadyJob{
 
 /* Refresher supply functions set and RefreshJob list for app */
 typedef struct _Refresher {
+	/**
+	 * add a job to refresher
+	 *
+	 * @param refresher the refresher pointer
+	 * @param name job name
+	 * @param priority Job refresh priority.The highest priority is 0.
+	 * @param period Refresh time = period * refresher tick. @see Refresher.tickTime
+	 * @param times If it is REFRESHER_JOB_CONTINUES_RUN,the job will continuous running.
+	 * @param newThread If it is TRUE,refresher will new a thread to refresh this job.
+	 * @param satckSize The new thread job stack size.It is not NULL while newThread is TRUE.
+	 * @param refreshProcess the job refresh process
+	 *
+	 * @return error code
+	 */
 	RefresherErrCode (*add)(struct _Refresher* const refresher, char* name,
 			int8_t priority, uint8_t period, int16_t times, bool_t newThread,
 			uint32_t satckSize, void (*refreshProcess)(void *arg));
+	/**
+	 * delete a job in refresher.@see delJobInOneQueue
+	 *
+	 * @param refresher the refresher pointer
+	 * @param name job name
+	 *
+	 * @return error code
+	 *
+	 */
 	RefresherErrCode (*del)(struct _Refresher* const refresher,
 			const char* name);
+	/**
+	 * set the job period and priority
+	 *
+	 * @param refresher the refresher pointer
+	 * @param name job name
+	 * @param period job period
+	 * @param priority job priority
+	 *
+	 * @return error code
+	 */
 	RefresherErrCode (*setPeriodAndPriority)(struct _Refresher* const refresher,
 			char* name, uint8_t period, int8_t priority);
+	/**
+	 * set the job running times
+	 *
+	 * @param refresher the refresher pointer
+	 * @param name job name
+	 * @param times job running times
+	 *
+	 * @return error code
+	 */
 	RefresherErrCode (*setTimes)(struct _Refresher* const refresher, char* name,
 			int16_t times);
 	uint32_t tick;                      /**< the Refresher running tick time. unit:Millisecond */

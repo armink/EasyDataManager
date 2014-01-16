@@ -135,7 +135,7 @@ void tempRefreshProcess(void *arg){
 
 void pressureRefreshProcess(void *arg){
 	LogD("Pressure refresh is process");
-	rt_thread_delay(50);
+	rt_thread_delay(20);
 }
 
 void testRefresher(){
@@ -143,14 +143,22 @@ void testRefresher(){
 	initRefresher(&refresher,512,5,50);
 	refresher.add(&refresher,"Temp",8,2,-1,FALSE,512,tempRefreshProcess);
 	refresher.add(&refresher,"Pressure",10,4,-1,FALSE,512,pressureRefreshProcess);
-	refresher.add(&refresher,"Temp",8,2,4,TRUE,512,tempRefreshProcess);
-	refresher.add(&refresher,"Pressure",10,4,4,TRUE,512,pressureRefreshProcess);
+//	refresher.add(&refresher,"Temp",8,2,4,TRUE,512,tempRefreshProcess);
+//	refresher.add(&refresher,"Pressure",10,4,4,TRUE,512,pressureRefreshProcess);
 	rt_thread_delay(2000);
 	refresher.setPeriodAndPriority(&refresher,"Pressure",1,1);
+	LogD("change period and priority ");
 	rt_thread_delay(2000);
-	LogD("will setTimes");
 	refresher.setTimes(&refresher,"Pressure",1);
+	LogD("setTimes");
+	rt_thread_delay(2000);
+	LogD("will delete job");
 	refresher.del(&refresher,"Temp");
+	LogD("delete job1");
+	refresher.del(&refresher,"Temp");
+	LogD("delete job2");
+	refresher.del(&refresher,"Pressure");
+	LogD("delete job3");
 	rt_thread_delay(5000);
 }
 
