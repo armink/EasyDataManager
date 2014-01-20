@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<?fileVersion 4.0.0?><cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
+<?fileVersion 4.0.0?>
+
+<cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
 	<storageModule moduleId="org.eclipse.cdt.core.settings">
 		<cconfiguration id="cdt.managedbuild.config.gnu.mingw.exe.debug.514594119">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.mingw.exe.debug.514594119" moduleId="org.eclipse.cdt.core.settings" name="Debug">
 				<externalSettings/>
 				<extensions>
+					<extension id="org.eclipse.cdt.core.PE" point="org.eclipse.cdt.core.BinaryParser"/>
 					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
-					<extension id="org.eclipse.cdt.core.PE" point="org.eclipse.cdt.core.BinaryParser"/>
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
@@ -62,7 +64,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="thread_pool/ucosiii|thread_pool/ucosiii/App/Exec.c|app1|logger1|thread_pool/ucosiii/App/main.c|rt-thread|thread_pool/ucosiiibak|app/src/app_ucos.c|pthread|thread_pool/ucos2|src|thread_pool/ucosiii/App/Radian.c|thread_pool/ucosiii/App/Random.c|inc|drivers|thread_pool/ucosii|app/src/app_pthread.c|posix|thread_pool1|cache1|ucos|thread_pool/ucosiii/App/Stack.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="app/src/app_pthread.c|thread_pool/ucosiii|thread_pool/ucosiii/App/Exec.c|app1|logger1|thread_pool/ucosiii/App/main.c|rt-thread|thread_pool/ucosiiibak|app/src/app_ucos.c|pthread|thread_pool/ucos2|src|thread_pool/ucosiii/App/Radian.c|thread_pool/ucosiii/App/Random.c|inc|drivers|thread_pool/ucosii|posix|thread_pool1|cache1|ucos|thread_pool/ucosiii/App/Stack.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -72,10 +74,10 @@
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.mingw.exe.release.1704219208" moduleId="org.eclipse.cdt.core.settings" name="Release">
 				<externalSettings/>
 				<extensions>
+					<extension id="org.eclipse.cdt.core.PE" point="org.eclipse.cdt.core.BinaryParser"/>
 					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
-					<extension id="org.eclipse.cdt.core.PE" point="org.eclipse.cdt.core.BinaryParser"/>
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
@@ -107,7 +109,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="thread_pool/ucosiii/App/Exec.c|logger1|app1|thread_pool/ucosiiibak|app/src/app_ucos.c|thread_pool/ucos2|src|thread_pool/ucosiii/App/Radian.c|thread_pool/rt-thread/drivers|thread_pool/ucosii|drivers|inc|cache1|thread_pool/ucosiii/App/Stack.c|thread_pool/rt-thread/inc|thread_pool/ucosiii|thread_pool/ucosiii/App/main.c|rt-thread|thread_pool/rt-thread|pthread|thread_pool/ucosiii/App/Random.c|app/src/app_pthread.c|thread_pool/rt-thread/src|posix|thread_pool1|thread_pool/pthread|ucos" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="app/src/app_pthread.c|thread_pool/ucosiii/App/Exec.c|logger1|app1|thread_pool/ucosiiibak|app/src/app_ucos.c|thread_pool/ucos2|src|thread_pool/ucosiii/App/Radian.c|thread_pool/rt-thread/drivers|thread_pool/ucosii|drivers|inc|cache1|thread_pool/ucosiii/App/Stack.c|thread_pool/rt-thread/inc|thread_pool/ucosiii|thread_pool/ucosiii/App/main.c|rt-thread|thread_pool/rt-thread|pthread|thread_pool/ucosiii/App/Random.c|thread_pool/rt-thread/src|posix|thread_pool1|thread_pool/pthread|ucos" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

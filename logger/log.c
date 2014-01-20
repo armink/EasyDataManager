@@ -10,7 +10,8 @@
 #include "log.h"
 
 #if defined(EDM_USING_PTHREAD)
-static pthread_mutex_t printLock;
+static pthread_mutex_t _printLock;
+static pthread_mutex_t* printLock = &_printLock;
 #elif defined(EDM_USING_RTT)
 static struct rt_mutex _printLock;
 static rt_mutex_t printLock = &_printLock;
@@ -143,7 +144,7 @@ void printTime(void) {
  */
 static void threadMutexInit(void){
 #if defined(EDM_USING_PTHREAD)
-	pthread_mutex_init(printLock), NULL);
+	pthread_mutex_init(printLock, NULL);
 
 #elif defined(EDM_USING_RTT)
 	rt_mutex_init(printLock,"printLock",RT_IPC_FLAG_PRIO);
