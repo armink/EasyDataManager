@@ -11,8 +11,9 @@
 #include "cache.h"
 
 static pCacheData hasData(pCache const cache, const char* name);
-static CacheErrCode addData(pCache const cache, char* name, uint8_t length,
-		uint16_t* value, void* (*valueChangedListener)(void *arg));
+static CacheErrCode addData(pCache const cache, const char* name,
+		uint8_t length, uint16_t* value,
+		void* (*valueChangedListener)(void *arg));
 static CacheErrCode delData(pCache const cache, const char* name);
 static CacheErrCode getValue(pCache const cache, const char* name,
 		uint16_t* value);
@@ -98,9 +99,8 @@ pCacheData hasData(pCache const cache, const char* name) {
  *
  * @return error code
  */
-CacheErrCode addData(pCache const cache, char* name, uint8_t length,
-		uint16_t* value,
-		void* (*valueChangedListener)(void *arg)) {
+CacheErrCode addData(pCache const cache, const char* name, uint8_t length,
+		uint16_t* value, void* (*valueChangedListener)(void *arg)) {
 	CacheErrCode errorCode = CACHE_NO_ERR;
 	pCacheData data;
 	/* lock the thread pool synchronized lock */

@@ -70,7 +70,7 @@ typedef struct _Refresher {
 	 *
 	 * @return error code
 	 */
-	RefresherErrCode (*add)(struct _Refresher* const refresher, char* name,
+	RefresherErrCode (*add)(struct _Refresher* const refresher, const char* name,
 			int8_t priority, uint8_t period, int16_t times, bool_t newThread,
 			uint32_t satckSize, void (*refreshProcess)(void *arg));
 	/**
@@ -95,7 +95,7 @@ typedef struct _Refresher {
 	 * @return error code
 	 */
 	RefresherErrCode (*setPeriodAndPriority)(struct _Refresher* const refresher,
-			char* name, uint8_t period, int8_t priority);
+			const char* name, uint8_t period, int8_t priority);
 	/**
 	 * set the job running times
 	 *
@@ -105,8 +105,8 @@ typedef struct _Refresher {
 	 *
 	 * @return error code
 	 */
-	RefresherErrCode (*setTimes)(struct _Refresher* const refresher, char* name,
-			int16_t times);
+	RefresherErrCode (*setTimes)(struct _Refresher* const refresher,
+			const char* name, int16_t times);
 	uint32_t tick;                      /**< the Refresher running tick time. unit:Millisecond */
 	rt_thread_t kernelID;               /**< the Refresher kernel thread ID,running all nonblock job */
 	pRefreshJob queueHead;              /**< the refresh job queue */

@@ -162,17 +162,11 @@ void testRefresher(){
 	rt_thread_delay(5000);
 }
 
-//***************************系统监控线程***************************
-//函数定义: void thread_entry_SysRunLed(void* parameter)
-//入口参数：无
-//出口参数：无
-//备    注：Editor：Armink   2013-08-02   Company: BXXJS
-//******************************************************************
 void thread_entry_SysMonitor(void* parameter) {
 	uint8_t i = 0;
 	initLogger(TRUE);
-//	testCache();
-	testRefresher();
+	testCache();
+//	testRefresher();
 	for (i = 0; i < 10; i++) {
 		LogD("hello, world2");
 		rt_thread_delay(1000);

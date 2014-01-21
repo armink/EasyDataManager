@@ -9,16 +9,16 @@
 
 #include "refresher.h"
 
-static RefresherErrCode add(pRefresher const refresher, char* name,
+static RefresherErrCode add(pRefresher const refresher, const char* name,
 		int8_t priority, uint8_t period, int16_t times, bool_t newThread,
 		uint32_t satckSize, void (*refreshProcess)(void *arg));
 static RefresherErrCode del(pRefresher const refresher, const char* name);
 static RefresherErrCode setPeriodAndPriority(pRefresher const refresher,
-		char* name, uint8_t period, int8_t priority);
-static RefresherErrCode setTimes(pRefresher const refresher, char* name,
+		const char* name, uint8_t period, int8_t priority);
+static RefresherErrCode setTimes(pRefresher const refresher, const char* name,
 		int16_t times);
 static void kernel(void* arg);
-static pRefreshJob hasJob(pRefresher const refresher, char* name);
+static pRefreshJob hasJob(pRefresher const refresher, const char* name);
 static void newThreadJob(void* arg);
 static void addReadyJobToQueue(pRefresher const refresher);
 static pRefreshJob selectJobFromReadyQueue(pRefresher const refresher);
@@ -312,7 +312,7 @@ void newThreadJob(void* arg) {
  *
  * @return job pointer when find success
  */
-pRefreshJob hasJob(pRefresher const refresher, char* name) {
+pRefreshJob hasJob(pRefresher const refresher, const char* name) {
 	pRefreshJob member = refresher->queueHead;
 	assert((name != NULL) && (strlen(name) <= REFRESHER_JOB_NAME_MAX));
 	/* job queue is empty */
@@ -345,9 +345,9 @@ pRefreshJob hasJob(pRefresher const refresher, char* name) {
  *
  * @return error code
  */
-RefresherErrCode add(pRefresher const refresher, char* name, int8_t priority,
-		uint8_t period, int16_t times, bool_t newThread, uint32_t satckSize,
-		void (*refreshProcess)(void *arg)) {
+RefresherErrCode add(pRefresher const refresher, const char* name,
+		int8_t priority, uint8_t period, int16_t times, bool_t newThread,
+		uint32_t satckSize, void (*refreshProcess)(void *arg)) {
 	RefresherErrCode errorCode = REFRESHER_NO_ERR;
 	pRefreshJob member = NULL;
 	pRefreshJob newJob = NULL;
@@ -575,8 +575,8 @@ static RefresherErrCode del(pRefresher const refresher, const char* name){
  *
  * @return error code
  */
-RefresherErrCode setPeriodAndPriority(pRefresher const refresher, char* name,
-		uint8_t period, int8_t priority) {
+RefresherErrCode setPeriodAndPriority(pRefresher const refresher,
+		const char* name, uint8_t period, int8_t priority) {
 	RefresherErrCode errorCode = REFRESHER_NO_ERR;
 	pRefreshJob member = refresher->queueHead;
 
@@ -618,7 +618,8 @@ RefresherErrCode setPeriodAndPriority(pRefresher const refresher, char* name,
  *
  * @return error code
  */
-RefresherErrCode setTimes(pRefresher const refresher, char* name, int16_t times) {
+RefresherErrCode setTimes(pRefresher const refresher, const char* name,
+		int16_t times) {
 	RefresherErrCode errorCode = REFRESHER_NO_ERR;
 	pRefreshJob member = refresher->queueHead;
 
