@@ -37,7 +37,7 @@ typedef enum{
 
 /* RefreshJob is an auto refresh job for a Cache data. */
 typedef struct _RefreshJob{
-	char  name[CACHE_NAME_MAX];         /**< the name of the CacheData is refreshed.@see CacheData */
+	char  name[CACHE_NAME_MAX+1];       /**< the name of the CacheData is refreshed.@see CacheData */
 	int16_t times;                      /**< job running times.If it is -1,the job will continuous running. */
 	uint8_t priority;                   /**< refresh priority.The highest priority is 0. */
 	uint8_t period;                     /**< refresh time = period * refresher tick. @see Refresher.tickTime */

@@ -42,9 +42,9 @@ typedef enum{
 
 /* CacheData is the dynamic cache data's property. */
 typedef struct _CacheData{
-	char  name[CACHE_NAME_MAX];         /**< the name of CacheData */
+	char  name[CACHE_NAME_MAX+1];       /**< the name of CacheData, the end of name is include '\0' */
 	uint8_t length;                     /**< value length */
-	uint8_t level;                      /**< refresh level.If level is 0,value will not refresh */
+	uint8_t level;                      /**< refresh level.If level is 0, value will not refresh */
 	uint16_t* value;                    /**< the value pointer*/
 	void* (*valueChangedListener)(void *arg); /**< it will call when the CacheData's value has changed */
 	struct _CacheData* next;            /**< point to next CacheData */
@@ -63,7 +63,7 @@ typedef struct _Cache {
 			uint16_t* value);
 	CacheErrCode (*getSize)(struct _Cache* const cache, uint16_t* length,
 			uint32_t* size);
-	char name[CACHE_NAME_MAX]; /**< the name of CacheData */
+	char name[CACHE_NAME_MAX+1];   /**< the name of CacheData, the end of name is include '\0' */
 	pCacheData dataHead;
 	pCacheData dataTail;
 	pThreadPool pool;
