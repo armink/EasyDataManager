@@ -10,10 +10,10 @@
 
 #ifdef EDM_USING_RTT
 
-static inline ThreadPoolErrCode addTask(pThreadPool const pool,
+static ThreadPoolErrCode addTask(pThreadPool const pool,
 		void *(*process)(void *arg), void *arg);
-static inline ThreadPoolErrCode destroy(pThreadPool pool);
-static inline void threadJob(void* arg);
+static ThreadPoolErrCode destroy(pThreadPool pool);
+static void threadJob(void* arg);
 static inline void syncLock(pThreadPool pool);
 static inline void syncUnlock(pThreadPool pool);
 
@@ -76,7 +76,7 @@ ThreadPoolErrCode initThreadPool(pThreadPool const pool, uint8_t maxThreadNum) {
  *
  * @return error code
  */
-static inline ThreadPoolErrCode addTask(pThreadPool const pool,
+static ThreadPoolErrCode addTask(pThreadPool const pool,
 		void *(*process)(void *arg), void *arg) {
 	ThreadPoolErrCode errorCode = THREAD_POOL_NO_ERR;
 	pTask member = NULL;
@@ -114,7 +114,7 @@ static inline ThreadPoolErrCode addTask(pThreadPool const pool,
  *
  * @return error code
  */
-static inline ThreadPoolErrCode destroy(pThreadPool pool) {
+static ThreadPoolErrCode destroy(pThreadPool pool) {
 	ThreadPoolErrCode errorCode = THREAD_POOL_NO_ERR;
 	pTask head = NULL;
 	uint8_t i;
@@ -156,7 +156,7 @@ static inline ThreadPoolErrCode destroy(pThreadPool pool) {
  * @param arg the thread job arguments
  *
  */
-static inline void threadJob(void* arg) {
+static void threadJob(void* arg) {
 	pThreadPool pool = NULL;
 	pTask task = NULL;
 	LogD("threadJob is running");

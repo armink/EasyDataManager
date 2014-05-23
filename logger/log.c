@@ -22,11 +22,11 @@ static rt_mutex_t printLock = &_printLock;
 static uint8_t isOpenPrint = FALSE;
 static uint8_t isInitLog = FALSE;
 
-static void printTime(void);
-static void printThreadInfo(void);
+static inline void printTime(void);
+static inline void printThreadInfo(void);
 static void threadMutexInit(void);
-static void threadMutexLock(void);
-static void threadMutexUnlock(void);
+static inline void threadMutexLock(void);
+static inline void threadMutexUnlock(void);
 static void threadMutexDestroy(void);
 
 
@@ -40,6 +40,9 @@ inline void initLogger(uint8_t isOpen) {
 		threadMutexInit();
 	}
 	isInitLog = TRUE;
+	printf("Wellcom to ues Easy Data Manager(V%ld.%02ld.%02ld) by armink. E-Mail:armink.ztl@gmail.com \n",
+			EDM_VERSION,EDM_SUBVERSION,EDM_REVISION);
+	printf("Logger initialize success.\n");
 }
 
 /**
@@ -142,7 +145,7 @@ inline void printTime(void) {
  * This function is initialize the printLock mutex.
  *
  */
-static inline void threadMutexInit(void){
+static void threadMutexInit(void){
 #if defined(EDM_USING_PTHREAD)
 	pthread_mutex_init(printLock, NULL);
 
@@ -181,7 +184,7 @@ static inline void threadMutexUnlock(void){
  * This function is destroy the printLock mutex.
  *
  */
-static inline void threadMutexDestroy(void){
+static void threadMutexDestroy(void){
 #if defined(EDM_USING_PTHREAD)
 	pthread_mutex_destroy(printLock);
 

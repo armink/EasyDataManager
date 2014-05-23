@@ -9,22 +9,22 @@
 
 #include "refresher.h"
 
-static inline RefresherErrCode add(pRefresher const refresher, const char* name,
+static RefresherErrCode add(pRefresher const refresher, const char* name,
 		int8_t priority, uint8_t period, int16_t times, bool_t newThread,
 		uint32_t satckSize, void (*refreshProcess)(void *arg));
-static inline RefresherErrCode del(pRefresher const refresher, const char* name);
-static inline RefresherErrCode setPeriodAndPriority(pRefresher const refresher,
+static RefresherErrCode del(pRefresher const refresher, const char* name);
+static RefresherErrCode setPeriodAndPriority(pRefresher const refresher,
 		const char* name, uint8_t period, int8_t priority);
-static inline RefresherErrCode setTimes(pRefresher const refresher,
+static RefresherErrCode setTimes(pRefresher const refresher,
 		const char* name, int16_t times);
-static inline void kernel(void* arg);
+static void kernel(void* arg);
 static inline pRefreshJob hasJob(pRefresher const refresher, const char* name);
-static inline void newThreadJob(void* arg);
+static void newThreadJob(void* arg);
 static inline void addReadyJobToQueue(pRefresher const refresher);
 static inline pRefreshJob selectJobFromReadyQueue(pRefresher const refresher);
-static inline RefresherErrCode delJobInRefreshQueue(pRefresher const refresher,
+static RefresherErrCode delJobInRefreshQueue(pRefresher const refresher,
 		const char* name);
-static inline RefresherErrCode delJobInReadyQueue(pRefresher const refresher,
+static RefresherErrCode delJobInReadyQueue(pRefresher const refresher,
 		const char* name);
 
 /**
@@ -68,7 +68,7 @@ RefresherErrCode initRefresher(pRefresher const refresher, uint32_t stackSize,
  *
  * @see newThreadJob
  */
-static inline void kernel(void* arg) {
+static void kernel(void* arg) {
 	pRefresher refresher = (pRefresher)arg;
 	pRefreshJob job = NULL ;
 	uint32_t startTime , runningTime ;
@@ -269,7 +269,7 @@ static inline pRefreshJob selectJobFromReadyQueue(pRefresher const refresher) {
  *
  * @see kernel
  */
-static inline void newThreadJob(void* arg) {
+static void newThreadJob(void* arg) {
 	pRefresher refresher = (pRefresher) arg;
 	rt_thread_t thread = rt_thread_self();
 	pRefreshJob job = NULL;
@@ -345,7 +345,7 @@ static inline pRefreshJob hasJob(pRefresher const refresher, const char* name) {
  *
  * @return error code
  */
-static inline RefresherErrCode add(pRefresher const refresher, const char* name,
+static RefresherErrCode add(pRefresher const refresher, const char* name,
 		int8_t priority, uint8_t period, int16_t times, bool_t newThread,
 		uint32_t satckSize, void (*refreshProcess)(void *arg)) {
 	RefresherErrCode errorCode = REFRESHER_NO_ERR;
@@ -411,7 +411,7 @@ static inline RefresherErrCode add(pRefresher const refresher, const char* name,
  *
  * @see delJobInReadyQueue
  */
-static inline RefresherErrCode delJobInRefreshQueue(pRefresher const refresher,
+static RefresherErrCode delJobInRefreshQueue(pRefresher const refresher,
 		const char* name) {
 	RefresherErrCode errorCode = REFRESHER_NO_ERR;
 	pRefreshJob member = refresher->queueHead, memberTemp = NULL;
@@ -486,7 +486,7 @@ static inline RefresherErrCode delJobInRefreshQueue(pRefresher const refresher,
  *
  * @see delJobInRefreshQueue
  */
-static inline RefresherErrCode delJobInReadyQueue(pRefresher const refresher,
+static RefresherErrCode delJobInReadyQueue(pRefresher const refresher,
 		const char* name) {
 	RefresherErrCode errorCode = REFRESHER_NO_ERR;
 	pReadyJob member = refresher->readyQueueHead, memberTemp = NULL;
@@ -558,7 +558,7 @@ static inline RefresherErrCode delJobInReadyQueue(pRefresher const refresher,
  *
  * @return error code
  */
-static inline RefresherErrCode del(pRefresher const refresher, const char* name) {
+static RefresherErrCode del(pRefresher const refresher, const char* name) {
 	RefresherErrCode errorCode = REFRESHER_NO_ERR;
 	errorCode = delJobInReadyQueue(refresher, name);
 	if (errorCode == REFRESHER_NO_ERR) {
@@ -577,7 +577,7 @@ static inline RefresherErrCode del(pRefresher const refresher, const char* name)
  *
  * @return error code
  */
-static inline RefresherErrCode setPeriodAndPriority(pRefresher const refresher,
+static RefresherErrCode setPeriodAndPriority(pRefresher const refresher,
 		const char* name, uint8_t period, int8_t priority) {
 	RefresherErrCode errorCode = REFRESHER_NO_ERR;
 	pRefreshJob member = refresher->queueHead;
@@ -620,7 +620,7 @@ static inline RefresherErrCode setPeriodAndPriority(pRefresher const refresher,
  *
  * @return error code
  */
-static inline RefresherErrCode setTimes(pRefresher const refresher,
+static RefresherErrCode setTimes(pRefresher const refresher,
 		const char* name, int16_t times) {
 	RefresherErrCode errorCode = REFRESHER_NO_ERR;
 	pRefreshJob member = refresher->queueHead;

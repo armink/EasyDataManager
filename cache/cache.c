@@ -11,15 +11,15 @@
 #include "cache.h"
 
 static inline pCacheData hasData(pCache const cache, const char* name);
-static inline CacheErrCode addData(pCache const cache, const char* name,
+static CacheErrCode addData(pCache const cache, const char* name,
 		uint8_t length, uint16_t* value,
 		void* (*valueChangedListener)(void *arg));
-static inline CacheErrCode delData(pCache const cache, const char* name);
+static CacheErrCode delData(pCache const cache, const char* name);
 static inline CacheErrCode getValue(pCache const cache, const char* name,
 		uint16_t* value);
 static inline CacheErrCode setValue(pCache const cache, const char* name,
 		uint16_t* value);
-static inline CacheErrCode getSize(pCache const cache, uint32_t* length,
+static CacheErrCode getSize(pCache const cache, uint32_t* length,
 		uint32_t* size);
 
 /**
@@ -99,7 +99,7 @@ static inline pCacheData hasData(pCache const cache, const char* name) {
  *
  * @return error code
  */
-static inline CacheErrCode addData(pCache const cache, const char* name, uint8_t length,
+static CacheErrCode addData(pCache const cache, const char* name, uint8_t length,
 		uint16_t* value, void* (*valueChangedListener)(void *arg)) {
 	CacheErrCode errorCode = CACHE_NO_ERR;
 	pCacheData data;
@@ -161,7 +161,7 @@ static inline CacheErrCode addData(pCache const cache, const char* name, uint8_t
  *
  * @return error code
  */
-static inline CacheErrCode delData(pCache const cache, const char* name) {
+static CacheErrCode delData(pCache const cache, const char* name) {
 	CacheErrCode errorCode = CACHE_NO_ERR;
 	pCacheData data = cache->dataHead, dataTemp;
 	/* lock the thread pool synchronized lock */
@@ -294,7 +294,7 @@ static inline CacheErrCode setValue(pCache const cache, const char* name, uint16
  *
  * @return error code
  */
-static inline CacheErrCode getSize(pCache const cache, uint32_t* length, uint32_t* size) {
+static CacheErrCode getSize(pCache const cache, uint32_t* length, uint32_t* size) {
 	CacheErrCode errorCode = CACHE_NO_ERR;
 	pCacheData data = cache->dataHead;
 	*length = 0;
