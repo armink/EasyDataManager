@@ -10,16 +10,16 @@
 
 #include "cache.h"
 
-static pCacheData hasData(pCache const cache, const char* name);
-static CacheErrCode addData(pCache const cache, const char* name,
+static inline pCacheData hasData(pCache const cache, const char* name);
+static inline CacheErrCode addData(pCache const cache, const char* name,
 		uint8_t length, uint16_t* value,
 		void* (*valueChangedListener)(void *arg));
-static CacheErrCode delData(pCache const cache, const char* name);
-static CacheErrCode getValue(pCache const cache, const char* name,
+static inline CacheErrCode delData(pCache const cache, const char* name);
+static inline CacheErrCode getValue(pCache const cache, const char* name,
 		uint16_t* value);
-static CacheErrCode setValue(pCache const cache, const char* name,
+static inline CacheErrCode setValue(pCache const cache, const char* name,
 		uint16_t* value);
-static CacheErrCode getSize(pCache const cache, uint16_t* length,
+static inline CacheErrCode getSize(pCache const cache, uint32_t* length,
 		uint32_t* size);
 
 /**
@@ -64,7 +64,7 @@ CacheErrCode initCache(pCache const cache, const char* name,
  *
  * @return the CacheData point which has found,If not found will return NULL.
  */
-pCacheData hasData(pCache const cache, const char* name) {
+static inline pCacheData hasData(pCache const cache, const char* name) {
 	pCacheData data = cache->dataHead;
 
 	assert((name != NULL) && (strlen(name) <= CACHE_NAME_MAX));
@@ -99,7 +99,7 @@ pCacheData hasData(pCache const cache, const char* name) {
  *
  * @return error code
  */
-CacheErrCode addData(pCache const cache, const char* name, uint8_t length,
+static inline CacheErrCode addData(pCache const cache, const char* name, uint8_t length,
 		uint16_t* value, void* (*valueChangedListener)(void *arg)) {
 	CacheErrCode errorCode = CACHE_NO_ERR;
 	pCacheData data;
@@ -161,7 +161,7 @@ CacheErrCode addData(pCache const cache, const char* name, uint8_t length,
  *
  * @return error code
  */
-CacheErrCode delData(pCache const cache, const char* name) {
+static inline CacheErrCode delData(pCache const cache, const char* name) {
 	CacheErrCode errorCode = CACHE_NO_ERR;
 	pCacheData data = cache->dataHead, dataTemp;
 	/* lock the thread pool synchronized lock */
@@ -231,7 +231,7 @@ CacheErrCode delData(pCache const cache, const char* name) {
  *
  * @return error code
  */
-CacheErrCode getValue(pCache const cache, const char* name, uint16_t* value) {
+static inline CacheErrCode getValue(pCache const cache, const char* name, uint16_t* value) {
 	CacheErrCode errorCode = CACHE_NO_ERR;
 	pCacheData data;
 	uint8_t i;
@@ -261,7 +261,7 @@ CacheErrCode getValue(pCache const cache, const char* name, uint16_t* value) {
  *
  * @return error code
  */
-CacheErrCode setValue(pCache const cache, const char* name, uint16_t* value) {
+static inline CacheErrCode setValue(pCache const cache, const char* name, uint16_t* value) {
 	CacheErrCode errorCode = CACHE_NO_ERR;
 	pCacheData data = cache->dataHead;
 	uint8_t i, isValueChanged = FALSE;
@@ -294,7 +294,7 @@ CacheErrCode setValue(pCache const cache, const char* name, uint16_t* value) {
  *
  * @return error code
  */
-CacheErrCode getSize(pCache const cache, uint16_t* length, uint32_t* size) {
+static inline CacheErrCode getSize(pCache const cache, uint32_t* length, uint32_t* size) {
 	CacheErrCode errorCode = CACHE_NO_ERR;
 	pCacheData data = cache->dataHead;
 	*length = 0;

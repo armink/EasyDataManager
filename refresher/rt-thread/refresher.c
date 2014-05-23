@@ -9,22 +9,22 @@
 
 #include "refresher.h"
 
-static RefresherErrCode add(pRefresher const refresher, const char* name,
+static inline RefresherErrCode add(pRefresher const refresher, const char* name,
 		int8_t priority, uint8_t period, int16_t times, bool_t newThread,
 		uint32_t satckSize, void (*refreshProcess)(void *arg));
-static RefresherErrCode del(pRefresher const refresher, const char* name);
-static RefresherErrCode setPeriodAndPriority(pRefresher const refresher,
+static inline RefresherErrCode del(pRefresher const refresher, const char* name);
+static inline RefresherErrCode setPeriodAndPriority(pRefresher const refresher,
 		const char* name, uint8_t period, int8_t priority);
-static RefresherErrCode setTimes(pRefresher const refresher, const char* name,
-		int16_t times);
-static void kernel(void* arg);
-static pRefreshJob hasJob(pRefresher const refresher, const char* name);
-static void newThreadJob(void* arg);
-static void addReadyJobToQueue(pRefresher const refresher);
-static pRefreshJob selectJobFromReadyQueue(pRefresher const refresher);
-static RefresherErrCode delJobInRefreshQueue(pRefresher const refresher,
+static inline RefresherErrCode setTimes(pRefresher const refresher,
+		const char* name, int16_t times);
+static inline void kernel(void* arg);
+static inline pRefreshJob hasJob(pRefresher const refresher, const char* name);
+static inline void newThreadJob(void* arg);
+static inline void addReadyJobToQueue(pRefresher const refresher);
+static inline pRefreshJob selectJobFromReadyQueue(pRefresher const refresher);
+static inline RefresherErrCode delJobInRefreshQueue(pRefresher const refresher,
 		const char* name);
-static RefresherErrCode delJobInReadyQueue(pRefresher const refresher,
+static inline RefresherErrCode delJobInReadyQueue(pRefresher const refresher,
 		const char* name);
 
 /**
@@ -68,7 +68,7 @@ RefresherErrCode initRefresher(pRefresher const refresher, uint32_t stackSize,
  *
  * @see newThreadJob
  */
-void kernel(void* arg) {
+static inline void kernel(void* arg) {
 	pRefresher refresher = (pRefresher)arg;
 	pRefreshJob job = NULL ;
 	uint32_t startTime , runningTime ;
@@ -106,7 +106,7 @@ void kernel(void* arg) {
  * @param refresher the refresher pointer
  *
  */
-void addReadyJobToQueue(pRefresher const refresher) {
+static inline void addReadyJobToQueue(pRefresher const refresher) {
 	pRefreshJob job = NULL;
 	pReadyJob readyJob = NULL, readyJobTemp = NULL;
 	job = refresher->queueHead;
@@ -181,7 +181,7 @@ void addReadyJobToQueue(pRefresher const refresher) {
  *
  * @return the selected job pointer
  */
-pRefreshJob selectJobFromReadyQueue(pRefresher const refresher) {
+static inline pRefreshJob selectJobFromReadyQueue(pRefresher const refresher) {
 	pRefreshJob job = NULL;
 	pReadyJob readyJob = refresher->readyQueueHead, readyJobTemp = NULL;
 	uint8_t highestPriority = 255;
@@ -269,7 +269,7 @@ pRefreshJob selectJobFromReadyQueue(pRefresher const refresher) {
  *
  * @see kernel
  */
-void newThreadJob(void* arg) {
+static inline void newThreadJob(void* arg) {
 	pRefresher refresher = (pRefresher) arg;
 	rt_thread_t thread = rt_thread_self();
 	pRefreshJob job = NULL;
@@ -312,7 +312,7 @@ void newThreadJob(void* arg) {
  *
  * @return job pointer when find success
  */
-pRefreshJob hasJob(pRefresher const refresher, const char* name) {
+static inline pRefreshJob hasJob(pRefresher const refresher, const char* name) {
 	pRefreshJob member = refresher->queueHead;
 	assert((name != NULL) && (strlen(name) <= REFRESHER_JOB_NAME_MAX));
 	/* job queue is empty */
@@ -345,7 +345,7 @@ pRefreshJob hasJob(pRefresher const refresher, const char* name) {
  *
  * @return error code
  */
-RefresherErrCode add(pRefresher const refresher, const char* name,
+static inline RefresherErrCode add(pRefresher const refresher, const char* name,
 		int8_t priority, uint8_t period, int16_t times, bool_t newThread,
 		uint32_t satckSize, void (*refreshProcess)(void *arg)) {
 	RefresherErrCode errorCode = REFRESHER_NO_ERR;
@@ -411,7 +411,8 @@ RefresherErrCode add(pRefresher const refresher, const char* name,
  *
  * @see delJobInReadyQueue
  */
-RefresherErrCode delJobInRefreshQueue(pRefresher const refresher, const char* name) {
+static inline RefresherErrCode delJobInRefreshQueue(pRefresher const refresher,
+		const char* name) {
 	RefresherErrCode errorCode = REFRESHER_NO_ERR;
 	pRefreshJob member = refresher->queueHead, memberTemp = NULL;
 
@@ -485,7 +486,8 @@ RefresherErrCode delJobInRefreshQueue(pRefresher const refresher, const char* na
  *
  * @see delJobInRefreshQueue
  */
-RefresherErrCode delJobInReadyQueue(pRefresher const refresher, const char* name) {
+static inline RefresherErrCode delJobInReadyQueue(pRefresher const refresher,
+		const char* name) {
 	RefresherErrCode errorCode = REFRESHER_NO_ERR;
 	pReadyJob member = refresher->readyQueueHead, memberTemp = NULL;
 
@@ -556,7 +558,7 @@ RefresherErrCode delJobInReadyQueue(pRefresher const refresher, const char* name
  *
  * @return error code
  */
-static RefresherErrCode del(pRefresher const refresher, const char* name){
+static inline RefresherErrCode del(pRefresher const refresher, const char* name) {
 	RefresherErrCode errorCode = REFRESHER_NO_ERR;
 	errorCode = delJobInReadyQueue(refresher, name);
 	if (errorCode == REFRESHER_NO_ERR) {
@@ -575,7 +577,7 @@ static RefresherErrCode del(pRefresher const refresher, const char* name){
  *
  * @return error code
  */
-RefresherErrCode setPeriodAndPriority(pRefresher const refresher,
+static inline RefresherErrCode setPeriodAndPriority(pRefresher const refresher,
 		const char* name, uint8_t period, int8_t priority) {
 	RefresherErrCode errorCode = REFRESHER_NO_ERR;
 	pRefreshJob member = refresher->queueHead;
@@ -618,8 +620,8 @@ RefresherErrCode setPeriodAndPriority(pRefresher const refresher,
  *
  * @return error code
  */
-RefresherErrCode setTimes(pRefresher const refresher, const char* name,
-		int16_t times) {
+static inline RefresherErrCode setTimes(pRefresher const refresher,
+		const char* name, int16_t times) {
 	RefresherErrCode errorCode = REFRESHER_NO_ERR;
 	pRefreshJob member = refresher->queueHead;
 

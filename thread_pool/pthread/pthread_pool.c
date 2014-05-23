@@ -11,12 +11,12 @@
 
 #ifdef EDM_USING_PTHREAD
 
-static ThreadPoolErrCode addTask(pThreadPool const pool,
+static inline ThreadPoolErrCode addTask(pThreadPool const pool,
 		void *(*process)(void *arg), void *arg);
-static ThreadPoolErrCode destroy(pThreadPool pool);
-static void* threadJob(void* arg);
-static void syncLock(pThreadPool pool);
-static void syncUnlock(pThreadPool pool);
+static inline ThreadPoolErrCode destroy(pThreadPool pool);
+static inline void* threadJob(void* arg);
+static inline void syncLock(pThreadPool pool);
+static inline void syncUnlock(pThreadPool pool);
 
 /**
  * This function will initialize the thread pool.
@@ -66,7 +66,7 @@ ThreadPoolErrCode initThreadPool(pThreadPool const pool, uint8_t maxThreadNum) {
  *
  * @return error code
  */
-ThreadPoolErrCode addTask(pThreadPool const pool, void *(*process)(void *arg),
+static inline ThreadPoolErrCode addTask(pThreadPool const pool, void *(*process)(void *arg),
 		void *arg) {
 	ThreadPoolErrCode errorCode = THREAD_POOL_NO_ERR;
 	pTask member = NULL;
@@ -104,7 +104,7 @@ ThreadPoolErrCode addTask(pThreadPool const pool, void *(*process)(void *arg),
  *
  * @return error code
  */
-ThreadPoolErrCode destroy(pThreadPool pool) {
+static inline ThreadPoolErrCode destroy(pThreadPool pool) {
 	ThreadPoolErrCode errorCode = THREAD_POOL_NO_ERR;
 	pTask head = NULL;
 	uint8_t i;
@@ -147,7 +147,7 @@ ThreadPoolErrCode destroy(pThreadPool pool) {
  * @param arg the thread job arguments
  *
  */
-void* threadJob(void* arg) {
+static inline void* threadJob(void* arg) {
 	pThreadPool pool = NULL;
 	while (1) {
 		pool = (pThreadPool)arg;
@@ -190,7 +190,7 @@ void* threadJob(void* arg) {
  * @param pool the ThreadPool pointer
  *
  */
-void syncLock(pThreadPool pool) {
+static inline void syncLock(pThreadPool pool) {
 //	LogD("is syncLock");
 	pthread_mutex_lock(&(pool->userLock));
 }
@@ -201,7 +201,7 @@ void syncLock(pThreadPool pool) {
  * @param pool the ThreadPool pointer
  *
  */
-void syncUnlock(pThreadPool pool) {
+static inline void syncUnlock(pThreadPool pool) {
 //	LogD("is syncUnlock");
 	pthread_mutex_unlock(&(pool->userLock));
 }

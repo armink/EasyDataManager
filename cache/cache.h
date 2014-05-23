@@ -44,7 +44,6 @@ typedef enum{
 typedef struct _CacheData{
 	char  name[CACHE_NAME_MAX+1];       /**< the name of CacheData, the end of name is include '\0' */
 	uint8_t length;                     /**< value length */
-	uint8_t level;                      /**< refresh level.If level is 0, value will not refresh */
 	uint16_t* value;                    /**< the value pointer*/
 	void* (*valueChangedListener)(void *arg); /**< it will call when the CacheData's value has changed */
 	struct _CacheData* next;            /**< point to next CacheData */
@@ -52,16 +51,70 @@ typedef struct _CacheData{
 
 /* Cache supply functions set and CacheData list for app */
 typedef struct _Cache {
+	/**
+	 * This function will find the data in CacheData list.
+	 *
+	 * @param cache the cache pointer
+	 * @param name the name of CacheData
+	 *
+	 * @return the CacheData point which has found,If not found will return NULL.
+	 */
 	pCacheData (*has)(struct _Cache* const cache, const char* name);
+	/**
+	 * This function will add CacheData to list.
+	 *
+	 * @param cache the cache pointer
+	 * @param name the name of CacheData
+	 * @param length the value length
+	 * @param value the value point
+	 * @param valueChangedListener the changed value's callback function
+	 *
+	 * @return error code
+	 */
 	CacheErrCode (*add)(struct _Cache* const cache, const char* name,
 			uint8_t length, uint16_t* value,
 			void* (*valueChangedListener)(void *arg));
+	/**
+	 * This function will delete the data from CacheData list.
+	 *
+	 * @param cache the cache pointer
+	 * @param name the cache data name
+	 *
+	 * @return error code
+	 */
 	CacheErrCode (*del)(struct _Cache* const cache, const char* name);
+	/**
+	 * This function will set the value in CacheData list.
+	 *
+	 * @param cache the cache pointer
+	 * @param name the cache data name
+	 * @param value the value which will set
+	 *
+	 * @return error code
+	 */
 	CacheErrCode (*set)(struct _Cache* const cache, const char* name,
 			uint16_t* value);
+	/**
+	 * This function will get the value from CacheData list.
+	 *
+	 * @param cache the cache pointer
+	 * @param name the cache data name
+	 * @param value the value which has getted
+	 *
+	 * @return error code
+	 */
 	CacheErrCode (*get)(struct _Cache* const cache, const char* name,
 			uint16_t* value);
-	CacheErrCode (*getSize)(struct _Cache* const cache, uint16_t* length,
+	/**
+	 * This function will set the value in CacheData list.
+	 *
+	 * @param cache the cache pointer
+	 * @param name the cache data name
+	 * @param value the value which will set
+	 *
+	 * @return error code
+	 */
+	CacheErrCode (*getSize)(struct _Cache* const cache, uint32_t* length,
 			uint32_t* size);
 	char name[CACHE_NAME_MAX+1];   /**< the name of CacheData, the end of name is include '\0' */
 	pCacheData dataHead;

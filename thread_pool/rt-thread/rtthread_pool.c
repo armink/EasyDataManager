@@ -10,12 +10,12 @@
 
 #ifdef EDM_USING_RTT
 
-static ThreadPoolErrCode addTask(pThreadPool const pool,
+static inline ThreadPoolErrCode addTask(pThreadPool const pool,
 		void *(*process)(void *arg), void *arg);
-static ThreadPoolErrCode destroy(pThreadPool pool);
-static void threadJob(void* arg);
-static void syncLock(pThreadPool pool);
-static void syncUnlock(pThreadPool pool);
+static inline ThreadPoolErrCode destroy(pThreadPool pool);
+static inline void threadJob(void* arg);
+static inline void syncLock(pThreadPool pool);
+static inline void syncUnlock(pThreadPool pool);
 
 /**
  * This function will initialize the thread pool.
@@ -76,8 +76,8 @@ ThreadPoolErrCode initThreadPool(pThreadPool const pool, uint8_t maxThreadNum) {
  *
  * @return error code
  */
-ThreadPoolErrCode addTask(pThreadPool const pool, void *(*process)(void *arg),
-		void *arg) {
+static inline ThreadPoolErrCode addTask(pThreadPool const pool,
+		void *(*process)(void *arg), void *arg) {
 	ThreadPoolErrCode errorCode = THREAD_POOL_NO_ERR;
 	pTask member = NULL;
 	pTask newtask = (pTask) malloc(sizeof(Task));
@@ -114,7 +114,7 @@ ThreadPoolErrCode addTask(pThreadPool const pool, void *(*process)(void *arg),
  *
  * @return error code
  */
-ThreadPoolErrCode destroy(pThreadPool pool) {
+static inline ThreadPoolErrCode destroy(pThreadPool pool) {
 	ThreadPoolErrCode errorCode = THREAD_POOL_NO_ERR;
 	pTask head = NULL;
 	uint8_t i;
@@ -156,7 +156,7 @@ ThreadPoolErrCode destroy(pThreadPool pool) {
  * @param arg the thread job arguments
  *
  */
-void threadJob(void* arg) {
+static inline void threadJob(void* arg) {
 	pThreadPool pool = NULL;
 	pTask task = NULL;
 	LogD("threadJob is running");
@@ -204,7 +204,7 @@ void threadJob(void* arg) {
  * @param pool the ThreadPool pointer
  *
  */
-void syncLock(pThreadPool pool) {
+static inline void syncLock(pThreadPool pool) {
 	rt_mutex_take(pool->userLock, RT_WAITING_FOREVER);
 }
 
@@ -214,7 +214,7 @@ void syncLock(pThreadPool pool) {
  * @param pool the ThreadPool pointer
  *
  */
-void syncUnlock(pThreadPool pool) {
+static inline void syncUnlock(pThreadPool pool) {
 	rt_mutex_release(pool->userLock);
 }
 

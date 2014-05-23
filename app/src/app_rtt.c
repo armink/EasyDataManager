@@ -87,8 +87,9 @@ void *valueChangedListener2(void *arg) {
 
 void testCache(void){
 	Cache cache;
-	uint16_t cacheLength,valueTemp[CACHE_LENGTH_MAX];
-	uint32_t cacheSize;
+	uint16_t valueTemp[CACHE_LENGTH_MAX];
+	uint32_t cacheLength, cacheSize;
+	initLogger(TRUE);
 	initCache(&cache,"cache",4);
 	valueTemp[0] = 0;
 	valueTemp[1] = 1;
@@ -126,6 +127,45 @@ void testCache(void){
 	//test destroy cache
 	rt_thread_delay(1000);
 	cache.pool->destroy(cache.pool);
+	destroyLogger();
+}
+
+void testCachePerformance(uint32_t dataTotalNum){
+	long i, lastTime;
+	uint16_t valueTemp[CACHE_LENGTH_MAX];
+	Cache cache;
+	char dataName[] = "0000000000000000000\0";
+	valueTemp[0] = 0;
+	valueTemp[1] = 1;
+	valueTemp[2] = 2;
+	valueTemp[3] = 3;
+	printf("Start test cache performance using %ld data, please wait...\n",dataTotalNum);
+	initCache(&cache,"cache",4);
+	lastTime = rt_tick_get();
+	for(i = 0 ; i < dataTotalNum ; i++){
+		ltoa(i,dataName,10);
+		cache.add(&cache,dataName,1,valueTemp,NULL);
+	}
+	printf("1.Test cache add data finish.This system can add %ld data to cache in 1s.\n",dataTotalNum*1000/(rt_tick_get() - lastTime));
+	lastTime = rt_tick_get();
+	for(i = 0 ;i < dataTotalNum;i++){
+		ltoa(i,dataName,10);
+		cache.set(&cache,dataName,valueTemp);
+	}
+	printf("2.Test cache set data finish.This system can set %ld data value in 1s.\n",dataTotalNum*1000/(rt_tick_get() - lastTime));
+	lastTime = rt_tick_get();
+	for(i = 0 ;i < dataTotalNum;i++){
+		ltoa(i,dataName,10);
+		cache.get(&cache,dataName,valueTemp);
+	}
+	printf("3.Test cache get data finish.This system can get %ld data value in 1s.\n",dataTotalNum*1000/(rt_tick_get() - lastTime));
+	lastTime = rt_tick_get();
+	for(i = 0 ;i < dataTotalNum;i++){
+		ltoa(i,dataName,10);
+		cache.del(&cache,dataName);
+	}
+	printf("4.Test cache delete data finish.This system can delete %ld data value in 1s.\n",dataTotalNum*1000/(rt_tick_get() - lastTime));
+
 }
 
 void tempRefreshProcess(void *arg){
@@ -140,6 +180,7 @@ void pressureRefreshProcess(void *arg){
 
 void testRefresher(){
 	Refresher refresher;
+	initLogger(TRUE);
 	initRefresher(&refresher,512,5,50);
 	refresher.add(&refresher,"Temp",8,2,-1,FALSE,512,tempRefreshProcess);
 	refresher.add(&refresher,"Pressure",10,4,-1,FALSE,512,pressureRefreshProcess);
@@ -160,18 +201,19 @@ void testRefresher(){
 	refresher.del(&refresher,"Pressure");
 	LogD("delete job3");
 	rt_thread_delay(5000);
+	destroyLogger();
 }
 
 void thread_entry_SysMonitor(void* parameter) {
 	uint8_t i = 0;
-	initLogger(TRUE);
+
 	testCache();
 //	testRefresher();
-	for (i = 0; i < 10; i++) {
+//	testCachePerformance(20000);
+	for (i = 0; i < 3; i++) {
 		LogD("hello, world2");
 		rt_thread_delay(1000);
 	}
-	destroyLogger();
 	exit(0);
 }
 

@@ -10,6 +10,10 @@
 #ifndef TYPES_H_
 #define TYPES_H_
 
+#define EDM_VERSION                      1L          /**< major version number */
+#define EDM_SUBVERSION                  05L          /**< minor version number */
+#define EDM_REVISION                    23L          /**< revise version number */
+
 typedef signed   char                   int8_t;      /**<  8bit integer type */
 typedef signed   short                  int16_t;     /**< 16bit integer type */
 typedef signed   long                   int32_t;     /**< 32bit integer type */

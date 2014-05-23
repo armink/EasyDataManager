@@ -34,7 +34,7 @@ static void threadMutexDestroy(void);
  * This function will initialize logger.
  *
  */
-void initLogger(uint8_t isOpen) {
+inline void initLogger(uint8_t isOpen) {
 	isOpenPrint = isOpen;
 	if (isOpen) {
 		threadMutexInit();
@@ -51,7 +51,7 @@ void initLogger(uint8_t isOpen) {
  * @param ... args
  *
  */
-void debug(const char *file, const long line, const char *format, ...) {
+inline void debug(const char *file, const long line, const char *format, ...) {
 	va_list args;
 #if defined(EDM_USING_RTT)
 	static char rt_log_buf[RT_CONSOLEBUF_SIZE];
@@ -84,7 +84,7 @@ void debug(const char *file, const long line, const char *format, ...) {
  * This function destroy the logger.
  *
  */
-void destroyLogger(void) {
+inline void destroyLogger(void) {
 	if (isOpenPrint) {
 		threadMutexDestroy();
 	}
@@ -96,7 +96,7 @@ void destroyLogger(void) {
  * This function is print thread info.
  *
  */
-void printThreadInfo(void){
+inline void printThreadInfo(void){
 
 #if defined(EDM_USING_PTHREAD)
 #if defined(WIN32) || defined(WIN64)
@@ -114,7 +114,7 @@ void printThreadInfo(void){
  * This function is print time info.
  *
  */
-void printTime(void) {
+inline void printTime(void) {
 #if defined(EDM_USING_PTHREAD)
 #if defined(WIN32) || defined(WIN64)
 	SYSTEMTIME currTime;
@@ -142,7 +142,7 @@ void printTime(void) {
  * This function is initialize the printLock mutex.
  *
  */
-static void threadMutexInit(void){
+static inline void threadMutexInit(void){
 #if defined(EDM_USING_PTHREAD)
 	pthread_mutex_init(printLock, NULL);
 
@@ -155,7 +155,7 @@ static void threadMutexInit(void){
  * This function is lock the printLock mutex.
  *
  */
-static void threadMutexLock(void){
+static inline void threadMutexLock(void){
 #if defined(EDM_USING_PTHREAD)
 	pthread_mutex_lock(printLock);
 
@@ -168,7 +168,7 @@ static void threadMutexLock(void){
  * This function is unlock the printLock mutex.
  *
  */
-static void threadMutexUnlock(void){
+static inline void threadMutexUnlock(void){
 #if defined(EDM_USING_PTHREAD)
 	pthread_mutex_unlock(printLock);
 
@@ -181,7 +181,7 @@ static void threadMutexUnlock(void){
  * This function is destroy the printLock mutex.
  *
  */
-static void threadMutexDestroy(void){
+static inline void threadMutexDestroy(void){
 #if defined(EDM_USING_PTHREAD)
 	pthread_mutex_destroy(printLock);
 
