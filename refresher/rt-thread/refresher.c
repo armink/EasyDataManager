@@ -129,7 +129,6 @@ static inline void addReadyJobToQueue(pRefresher const refresher) {
 	}
 	/* unlock job queue */
 	rt_mutex_release(refresher->queueLock);
-	readyJob = refresher->readyQueueHead;
 	/* search and add ready job to ready queue */
 	for (;;) {
 		if (job == NULL) {/* job find finish */
@@ -137,6 +136,7 @@ static inline void addReadyJobToQueue(pRefresher const refresher) {
 		} else if ((job->newThread == FALSE) && (job->times != 0)) {
 			/* If ready job queue is NULL,then add this job to queue immediately.  */
 			if (refresher->readyQueueHead != NULL) {
+				readyJob = refresher->readyQueueHead;
 				for (;;) {
 					/* The ready queue has this job.It isn't need to add.*/
 					if (readyJob == NULL) {/* Find finish.This job isn't in the ready queue.Add it. */
@@ -153,7 +153,7 @@ static inline void addReadyJobToQueue(pRefresher const refresher) {
 			if (readyJob == NULL) {
 				/* get tail ready job */
 				readyJob = readyJobTemp;
-				readyJobTemp = (pReadyJob) malloc(sizeof(ReadyJob));
+				readyJobTemp = (pReadyJob) rt_malloc(sizeof(ReadyJob));
 				assert(readyJobTemp != NULL);
 				/* lock job queue */
 				rt_mutex_take(refresher->queueLock, RT_WAITING_FOREVER);
@@ -211,7 +211,8 @@ static inline pRefreshJob selectJobFromReadyQueue(pRefresher const refresher) {
 				/* lock job queue */
 				rt_mutex_take(refresher->queueLock, RT_WAITING_FOREVER);
 				/* delete job */
-				if (readyJob == refresher->readyQueueHead) {/* queue head */
+				if ((readyJob->job != job)&&
+						(readyJob == refresher->readyQueueHead)) {/* queue head */
 					if (readyJob->next == NULL) { /* queue has one node */
 						refresher->readyQueueHead = NULL;
 						/* job will be freed in the end */
@@ -360,7 +361,7 @@ static RefresherErrCode add(pRefresher const refresher, const char* name,
 		LogD("the name of %s job is already exist in refresher", name);
 		errorCode = REFRESHER_JOB_NAME_ERROR;
 	} else {
-		newJob = (pRefreshJob) malloc(sizeof(RefreshJob));
+		newJob = (pRefreshJob) rt_malloc(sizeof(RefreshJob));
 		assert(newJob != NULL);
 		strcpy(newJob->name, name);
 	}
@@ -466,7 +467,7 @@ static RefresherErrCode delJobInRefreshQueue(pRefresher const refresher,
 		if (member->newThread) {
 			rt_thread_detach(member->threadID);
 		}
-		free(member);
+		rt_free(member);
 		member = NULL;
 	} else {
 		errorCode = REFRESHER_JOB_NAME_ERROR;
@@ -539,7 +540,7 @@ static RefresherErrCode delJobInReadyQueue(pRefresher const refresher,
 		}
 		/* make job stop and free it in ready queue */
 		member->job->times = 0;
-		free(member);
+		rt_free(member);
 		member = NULL;
 	} else {
 		errorCode = REFRESHER_JOB_NAME_ERROR;

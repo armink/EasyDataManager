@@ -89,7 +89,6 @@ void testCache(void){
 	Cache cache;
 	uint16_t valueTemp[CACHE_LENGTH_MAX];
 	uint32_t cacheLength, cacheSize;
-	initLogger(TRUE);
 	initCache(&cache,"cache",4);
 	valueTemp[0] = 0;
 	valueTemp[1] = 1;
@@ -127,7 +126,6 @@ void testCache(void){
 	//test destroy cache
 	rt_thread_delay(1000);
 	cache.pool->destroy(cache.pool);
-	destroyLogger();
 }
 
 void testCachePerformance(uint32_t dataTotalNum){
@@ -180,7 +178,6 @@ void pressureRefreshProcess(void *arg){
 
 void testRefresher(){
 	Refresher refresher;
-	initLogger(TRUE);
 	initRefresher(&refresher,512,5,50);
 	refresher.add(&refresher,"Temp",8,2,-1,FALSE,512,tempRefreshProcess);
 	refresher.add(&refresher,"Pressure",10,4,-1,FALSE,512,pressureRefreshProcess);
@@ -201,14 +198,18 @@ void testRefresher(){
 	refresher.del(&refresher,"Pressure");
 	LogD("delete job3");
 	rt_thread_delay(5000);
-	destroyLogger();
 }
 
 void thread_entry_SysMonitor(void* parameter) {
 	uint8_t i = 0;
 
+	initLogger(TRUE);
+
 	testCache();
-//	testRefresher();
+
+	testRefresher();
+
+//	destroyLogger();
 //	testCachePerformance(20000);
 	for (i = 0; i < 3; i++) {
 		LogD("hello, world2");
