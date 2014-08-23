@@ -37,14 +37,14 @@ typedef enum{
 
 /* RefreshJob is an auto refresh job for a Cache data. */
 typedef struct _RefreshJob{
-	char  name[CACHE_NAME_MAX+1];       /**< the name of the CacheData is refreshed.@see CacheData */
-	int16_t times;                      /**< job running times.If it is -1,the job will continuous running. */
-	uint8_t priority;                   /**< refresh priority.The highest priority is 0. */
-	uint8_t period;                     /**< refresh time = period * refresher tick. @see Refresher.tickTime */
-	bool_t newThread;                   /**< time-consuming or block job set it true will be better. */
-	rt_thread_t threadID;               /**< job running thread ID */
-	void (*refreshProcess)(void *arg);  /**< it will call when the RefreshJob need wrok */
-	struct _RefreshJob* next;           /**< point to next RefreshJob */
+	char  name[REFRESHER_JOB_NAME_MAX+1]; /**< the name of the refresher job, the end of name is include '\0'*/
+	int16_t times;                        /**< job running times.If it is -1,the job will continuous running. */
+	uint8_t priority;                     /**< refresh priority.The highest priority is 0. */
+	uint8_t period;                       /**< refresh time = period * refresher tick. @see Refresher.tickTime */
+	bool_t newThread;                     /**< time-consuming or block job set it true will be better. */
+	rt_thread_t threadID;                 /**< job running thread ID */
+	void (*refreshProcess)(void *arg);    /**< it will call when the RefreshJob need wrok */
+	struct _RefreshJob* next;             /**< point to next RefreshJob */
 } RefreshJob , *pRefreshJob;
 
 /* Refresher ready job in ready queue */
