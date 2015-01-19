@@ -53,7 +53,7 @@ CacheErrCode initCache(pCache const cache, const char* name, uint8_t maxThreadNu
     /* initialize the thread pool */
     cache->pool = (pThreadPool) malloc(sizeof(ThreadPool));
     assert(cache->pool != NULL);
-    initThreadPool(cache->pool, maxThreadNum, threadStackSize);
+    initThreadPool(cache->pool, "cache", maxThreadNum, threadStackSize);
     return errorCode;
 }
 

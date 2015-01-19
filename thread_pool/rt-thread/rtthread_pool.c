@@ -21,49 +21,54 @@ static inline void syncUnlock(pThreadPool pool);
  * This function will initialize the thread pool.
  *
  * @param pool the ThreadPool pointer
+ * @param name the ThreadPool name
  * @param maxThreadNum the max thread number in this ThreadPool
  * @param threadStackSize the thread stack size in this ThreadPool
  *
  * @return error code
  */
-ThreadPoolErrCode initThreadPool(pThreadPool const pool, uint8_t maxThreadNum, uint32_t threadStackSize) {
+ThreadPoolErrCode initThreadPool(pThreadPool const pool, const char* name, uint8_t maxThreadNum,
+        uint32_t threadStackSize) {
     ThreadPoolErrCode errorCode = THREAD_POOL_NO_ERR;
-    char name[RT_NAME_MAX] = "threadJob";
+    char jobName[THREAD_POOL_NAME_MAX] = {0};
     uint8_t i ;
-    if (maxThreadNum > THREAD_POOL_MAX_THREAD_NUM) {
-        errorCode = THREAD_POOL_MAX_NUM_ERR;
+
+    RT_ASSERT(name);
+    RT_ASSERT(strlen(name) <= THREAD_POOL_NAME_MAX);
+    RT_ASSERT(maxThreadNum <= THREAD_POOL_MAX_THREAD_NUM);
+
+    strcpy(pool->name, name);
+    strcpy(jobName, name);
+    strcpy(&jobName[strlen(jobName)],"_job");
+
+    pool->queueLock = rt_mutex_create("queueLock", RT_IPC_FLAG_FIFO);
+    RT_ASSERT(pool->queueLock != NULL);
+    pool->userLock = rt_mutex_create("userLock", RT_IPC_FLAG_FIFO);
+    RT_ASSERT(pool->userLock != NULL);
+    pool->queueReady = rt_sem_create("queueReady", 0, RT_IPC_FLAG_FIFO);
+    RT_ASSERT(pool->queueReady != NULL);
+    pool->queueHead = NULL;
+    pool->maxThreadNum = maxThreadNum;
+    pool->curWaitThreadNum = 0;
+    pool->isShutdown = FALSE;
+    pool->addTask = addTask;
+    pool->destroy = destroy;
+    pool->lock = syncLock;
+    pool->unlock = syncUnlock;
+    pool->threadID = (rt_thread_t*) malloc(maxThreadNum * sizeof(rt_thread_t));
+    RT_ASSERT(pool->threadID != NULL);
+    for (i = 0; i < maxThreadNum; i++) {
+        jobName[strlen(jobName)] = '0' + i;
+        pool->threadID[i] = rt_thread_create(jobName, threadJob, pool, threadStackSize,
+        THREAD_POOL_JOB_DEFAULT_PRIORITY, THREAD_POOL_JOB_TICK * i);
+        RT_ASSERT(pool->threadID[i] != NULL);
+        rt_thread_startup(pool->threadID[i]);
+        jobName[strlen(jobName) - 1] = '\0';
+        LogD("create thread success.Current total thread number is %d", i + 1);
+        rt_thread_delay(THREAD_POOL_THREADS_INIT_TIME);
     }
-    if (errorCode == THREAD_POOL_NO_ERR) {
-        pool->queueLock = rt_mutex_create("queueLock", RT_IPC_FLAG_FIFO);
-        RT_ASSERT(pool->queueLock != NULL);
-        pool->userLock = rt_mutex_create("userLock", RT_IPC_FLAG_FIFO);
-        RT_ASSERT(pool->userLock != NULL);
-        pool->queueReady = rt_sem_create("queueReady", 0, RT_IPC_FLAG_FIFO);
-        RT_ASSERT(pool->queueReady != NULL);
-        pool->queueHead = NULL;
-        pool->maxThreadNum = maxThreadNum;
-        pool->curWaitThreadNum = 0;
-        pool->isShutdown = FALSE;
-        pool->addTask = addTask;
-        pool->destroy = destroy;
-        pool->lock = syncLock;
-        pool->unlock = syncUnlock;
-        pool->threadID = (rt_thread_t*) malloc(
-                maxThreadNum * sizeof(rt_thread_t));
-        RT_ASSERT(pool->threadID != NULL);
-        for (i = 0; i < maxThreadNum; i++) {
-            name[strlen(name)] = '0' + i;
-            pool->threadID[i] = rt_thread_create(name, threadJob, pool, threadStackSize,
-            THREAD_POOL_JOB_DEFAULT_PRIORITY, THREAD_POOL_JOB_TICK * i);
-            RT_ASSERT(pool->threadID[i] != NULL);
-            rt_thread_startup(pool->threadID[i]);
-            name[strlen(name) - 1] = '\0';
-            LogD("create thread success.Current total thread number is %d",
-                    i + 1);
-            rt_thread_delay(THREAD_POOL_THREADS_INIT_TIME);
-        }
-        LogD("initialize thread pool success!");
-    }
+    LogD("initialize thread pool success!");
+
     return errorCode;
 }
 
