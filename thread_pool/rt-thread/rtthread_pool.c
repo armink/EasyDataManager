@@ -14,8 +14,8 @@ static ThreadPoolErrCode addTask(pThreadPool const pool,
         void *(*process)(void *arg), void *arg);
 static ThreadPoolErrCode destroy(pThreadPool pool);
 static void threadJob(void* arg);
-static inline void syncLock(pThreadPool pool);
-static inline void syncUnlock(pThreadPool pool);
+static void syncLock(pThreadPool pool);
+static void syncUnlock(pThreadPool pool);
 
 /**
  * This function will initialize the thread pool.
@@ -209,7 +209,7 @@ static void threadJob(void* arg) {
  * @param pool the ThreadPool pointer
  *
  */
-static inline void syncLock(pThreadPool pool) {
+static void syncLock(pThreadPool pool) {
     rt_mutex_take(pool->userLock, RT_WAITING_FOREVER);
 }
 
@@ -219,7 +219,7 @@ static inline void syncLock(pThreadPool pool) {
  * @param pool the ThreadPool pointer
  *
  */
-static inline void syncUnlock(pThreadPool pool) {
+static void syncUnlock(pThreadPool pool) {
     rt_mutex_release(pool->userLock);
 }
 

@@ -18,10 +18,10 @@ static RefresherErrCode setPeriodAndPriority(pRefresher const refresher,
 static RefresherErrCode setTimes(pRefresher const refresher,
         const char* name, int16_t times);
 static void kernel(void* arg);
-static inline pRefreshJob hasJob(pRefresher const refresher, const char* name);
+static pRefreshJob hasJob(pRefresher const refresher, const char* name);
 static void newThreadJob(void* arg);
-static inline void addReadyJobToQueue(pRefresher const refresher);
-static inline pRefreshJob selectJobFromReadyQueue(pRefresher const refresher);
+static void addReadyJobToQueue(pRefresher const refresher);
+static pRefreshJob selectJobFromReadyQueue(pRefresher const refresher);
 static RefresherErrCode delJobInRefreshQueue(pRefresher const refresher,
         const char* name);
 static RefresherErrCode delJobInReadyQueue(pRefresher const refresher,
@@ -106,7 +106,7 @@ static void kernel(void* arg) {
  * @param refresher the refresher pointer
  *
  */
-static inline void addReadyJobToQueue(pRefresher const refresher) {
+static void addReadyJobToQueue(pRefresher const refresher) {
     pRefreshJob job = NULL;
     pReadyJob readyJob = NULL, readyJobTemp = NULL;
     job = refresher->queueHead;
@@ -181,7 +181,7 @@ static inline void addReadyJobToQueue(pRefresher const refresher) {
  *
  * @return the selected job pointer
  */
-static inline pRefreshJob selectJobFromReadyQueue(pRefresher const refresher) {
+static pRefreshJob selectJobFromReadyQueue(pRefresher const refresher) {
     pRefreshJob job = NULL;
     pReadyJob readyJob = refresher->readyQueueHead, readyJobTemp = NULL;
     uint8_t highestPriority = 255;
@@ -313,7 +313,7 @@ static void newThreadJob(void* arg) {
  *
  * @return job pointer when find success
  */
-static inline pRefreshJob hasJob(pRefresher const refresher, const char* name) {
+static pRefreshJob hasJob(pRefresher const refresher, const char* name) {
     pRefreshJob member = refresher->queueHead;
     assert((name != NULL) && (strlen(name) <= REFRESHER_JOB_NAME_MAX));
     /* job queue is empty */
