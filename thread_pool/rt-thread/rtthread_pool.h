@@ -13,8 +13,7 @@
 #include <rthw.h>
 #include <rtthread.h>
 #include <string.h>
-#include "log.h"
-#include "edm_config.h"
+#include <edm_def.h>
 
 #ifdef EDM_USING_RTT
 
@@ -25,11 +24,11 @@
 #define THREAD_POOL_NAME_MAX     RT_NAME_MAX    /**< thread poll max name length */
 
 /* thread pool error code */
-typedef enum{
+typedef enum {
     THREAD_POOL_NO_ERR,                 /**< no error */
-    THREAD_POOL_NO_TASK,                 /**< no task */
     THREAD_POOL_ALREADY_SHUTDOWN_ERR,   /**< thread pool already shutdown */
-}ThreadPoolErrCode;
+    THREAD_POOL_MEM_FULL_ERR,           /**< memory full */
+} ThreadPoolErrCode;
 
 /* a task queue which run in thread pool */
 typedef struct _Task {

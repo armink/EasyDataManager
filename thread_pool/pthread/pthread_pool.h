@@ -14,9 +14,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <pthread.h>
-#include <assert.h>
-#include "log.h"
-#include "edm_config.h"
+#include "edm_def.h"
 
 #ifdef EDM_USING_PTHREAD
 

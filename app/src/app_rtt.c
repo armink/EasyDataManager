@@ -16,9 +16,21 @@
 #include <rtthread.h>
 #include <stdio.h>
 #include <board.h>
-#include "log.h"
 #include "cache.h"
 #include "refresher.h"
+#include <elog.h>
+
+#define assert     ELOG_ASSERT
+#define log_e(...) elog_e("app", __VA_ARGS__)
+#define log_w(...) elog_w("app", __VA_ARGS__)
+#define log_i(...) elog_i("app", __VA_ARGS__)
+
+#if EDM_DEBUG
+    #define log_d(...) elog_d("app", __VA_ARGS__)
+#else
+    #define log_d(...)
+#endif
+
 extern int  rt_application_init(void);
 
 extern rt_uint8_t *heap;
@@ -73,14 +85,14 @@ void rtthread_startup(void)
 
 void *valueChangedListener1(void *arg) {
     pCacheData data = (pCacheData)arg;
-    LogD("this is valueChangedListener1,the data %s was changed", data->name);
+    log_d("this is valueChangedListener1,the data %s was changed", data->name);
     rt_thread_delay(1);
     return NULL;
 }
 
 void *valueChangedListener2(void *arg) {
     pCacheData data = (pCacheData)arg;
-    LogD("this is valueChangedListener2,the data %s was changed", data->name);
+    log_d("this is valueChangedListener2,the data %s was changed", data->name);
     rt_thread_delay(1);
     return NULL;
 }
@@ -137,7 +149,7 @@ void testCachePerformance(uint32_t dataTotalNum){
     valueTemp[1] = 1;
     valueTemp[2] = 2;
     valueTemp[3] = 3;
-    printf("Start test cache performance using %ld data, please wait...\n", dataTotalNum);
+    printf("Start test cache performance using %d data, please wait...\n", dataTotalNum);
     initCache(&cache, "cache", 4, 512);
     lastTime = rt_tick_get();
     for (i = 0; i < dataTotalNum; i++) {
@@ -167,44 +179,54 @@ void testCachePerformance(uint32_t dataTotalNum){
 }
 
 void tempRefreshProcess(void *arg){
-    LogD("Temp refresh is process");
+    log_d("Temp refresh is process");
     rt_thread_delay(13);
 }
 
 void pressureRefreshProcess(void *arg){
-    LogD("Pressure refresh is process");
+    log_d("Pressure refresh is process");
     rt_thread_delay(20);
 }
 
 void testRefresher(){
     Refresher refresher;
-    initRefresher(&refresher, 512, 5, 50);
-    refresher.add(&refresher, "Temp", 8, 2, -1, FALSE, 512, tempRefreshProcess);
-    refresher.add(&refresher, "Pressure", 10, 4, -1, FALSE, 512, pressureRefreshProcess);
-//    refresher.add(&refresher,"Temp",8,2,4,TRUE,512,tempRefreshProcess);
-//    refresher.add(&refresher,"Pressure",10,4,4,TRUE,512,pressureRefreshProcess);
+    initRefresher(&refresher, 1024, 5, 50);
+    refresher.add(&refresher, "Temp", 8, 2, -1, false, 512, tempRefreshProcess);
+    refresher.add(&refresher, "Pressure", 10, 4, -1, false, 512, pressureRefreshProcess);
+//    refresher.add(&refresher,"Temp",8,2,4,true,512,tempRefreshProcess);
+//    refresher.add(&refresher,"Pressure",10,4,4,true,512,pressureRefreshProcess);
     rt_thread_delay(2000);
+    log_d("change period and priority ");
     refresher.setPeriodAndPriority(&refresher, "Pressure", 1, 1);
-    LogD("change period and priority ");
     rt_thread_delay(2000);
+    log_d("setTimes");
     refresher.setTimes(&refresher, "Pressure", 1);
-    LogD("setTimes");
     rt_thread_delay(2000);
-    LogD("will delete job");
+    log_d("will delete job");
     refresher.del(&refresher, "Temp");
-    LogD("delete job1");
+    log_d("retry delete job");
     refresher.del(&refresher, "Temp");
-    LogD("delete job2");
+    log_d("delete all jobs");
     refresher.delAll(&refresher);
-    LogD("delete all jobs");
     refresher.destroy(&refresher);
-    rt_thread_delay(5000);
+    rt_thread_delay(2000);
 }
 
 void thread_entry_SysMonitor(void* parameter) {
     uint8_t i = 0;
 
-    initLogger(TRUE);
+    /* EasyLogger library initialize */
+    elog_init();
+    elog_set_fmt(ELOG_LVL_ASSERT, ELOG_FMT_ALL & ~ELOG_FMT_P_INFO);
+    elog_set_fmt(ELOG_LVL_ERROR, ELOG_FMT_ALL & ~ELOG_FMT_P_INFO);
+    elog_set_fmt(ELOG_LVL_WARN, ELOG_FMT_ALL & ~ELOG_FMT_P_INFO);
+    elog_set_fmt(ELOG_LVL_INFO, ELOG_FMT_LVL | ELOG_FMT_TAG | ELOG_FMT_TIME);
+    elog_set_fmt(ELOG_LVL_DEBUG, ELOG_FMT_ALL & ~(ELOG_FMT_FUNC | ELOG_FMT_P_INFO));
+    elog_set_fmt(ELOG_LVL_VERBOSE, ELOG_FMT_ALL & ~(ELOG_FMT_FUNC | ELOG_FMT_P_INFO));
+    elog_set_filter_lvl(ELOG_LVL_VERBOSE);
+//    elog_set_text_color_enabled(true);
+    /* start EasyLogger */
+    elog_start();
 
     testCache();
 
@@ -213,30 +235,15 @@ void thread_entry_SysMonitor(void* parameter) {
 //    destroyLogger();
 //    testCachePerformance(20000);
     for (i = 0; i < 3; i++) {
-        LogD("hello, world");
+        log_d("hello, world");
         rt_thread_delay(1000);
     }
     exit(0);
 }
 
 int rt_application_init() {
-
-    static struct rt_thread thread_SysMonitor;
-    ALIGN(RT_ALIGN_SIZE)
-    static rt_uint8_t thread_SysMonitor_stack[512];
-
-//    rt_thread_init(&thread_SysMonitor,
-//                   "SysMonitor1",
-//                   thread_entry_SysMonitor,
-//                   RT_NULL,
-//                   thread_SysMonitor_stack,
-//                   sizeof(thread_SysMonitor_stack),
-//                   4,20);
-//    rt_thread_startup(&thread_SysMonitor);
-
     rt_thread_t tid;
-    tid = rt_thread_create("SysMonitor2", thread_entry_SysMonitor, RT_NULL, 2048,
-            4, 20);
+    tid = rt_thread_create("SysMonitor2", thread_entry_SysMonitor, RT_NULL, 4096, 4, 20);
     if (tid != RT_NULL)
         rt_thread_startup(tid);
 

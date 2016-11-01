@@ -37,13 +37,13 @@
 								<option id="gnu.c.compiler.option.include.paths.464226017" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/EasyDataManager/app/inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/EasyDataManager/cache}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/EasyDataManager/logger}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/EasyDataManager/thread_pool/rt-thread}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/EasyDataManager/thread_pool/rt-thread/inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/EasyDataManager/thread_pool/rt-thread/drivers}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/EasyDataManager/thread_pool/pthread}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/EasyDataManager/thread_pool/ucosiii/Include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/EasyDataManager/refresher/rt-thread}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/EasyDataManager/elog/inc}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.331462285" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
@@ -61,7 +61,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="app/src/app_pthread.c|thread_pool/ucosiii|thread_pool/ucosiii/App/Exec.c|app1|logger1|thread_pool/ucosiii/App/main.c|rt-thread|thread_pool/ucosiiibak|app/src/app_ucos.c|pthread|thread_pool/ucos2|src|thread_pool/ucosiii/App/Radian.c|thread_pool/ucosiii/App/Random.c|inc|drivers|thread_pool/ucosii|posix|thread_pool1|cache1|ucos|thread_pool/ucosiii/App/Stack.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="thread_pool/ucosiii/App/Stack.c|logger1|app1|src|thread_pool/ucosiii/App/Radian.c|rt-thread|cache1|ucos|app/src/app_pthread.c|pthread|thread_pool/ucosiiibak|thread_pool/ucos2|drivers|posix|inc|thread_pool1|thread_pool/ucosiii|thread_pool/ucosiii/App/main.c|app/src/app_ucos.c|thread_pool/ucosiii/App/Exec.c|thread_pool/ucosii|thread_pool/ucosiii/App/Random.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -106,7 +106,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="app/src/app_pthread.c|thread_pool/ucosiii/App/Exec.c|logger1|app1|thread_pool/ucosiiibak|app/src/app_ucos.c|thread_pool/ucos2|src|thread_pool/ucosiii/App/Radian.c|thread_pool/rt-thread/drivers|thread_pool/ucosii|drivers|inc|cache1|thread_pool/ucosiii/App/Stack.c|thread_pool/rt-thread/inc|thread_pool/ucosiii|thread_pool/ucosiii/App/main.c|rt-thread|thread_pool/rt-thread|pthread|thread_pool/ucosiii/App/Random.c|thread_pool/rt-thread/src|posix|thread_pool1|thread_pool/pthread|ucos" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="thread_pool/ucosiii/App/Stack.c|thread_pool/rt-thread/drivers|thread_pool/rt-thread/inc|logger1|app1|src|thread_pool/ucosiii/App/Radian.c|rt-thread|cache1|ucos|thread_pool/ucosiiibak|thread_pool/ucos2|inc|thread_pool1|thread_pool/ucosiii|thread_pool/ucosiii/App/main.c|thread_pool/ucosiii/App/Exec.c|thread_pool/rt-thread|thread_pool/ucosii|thread_pool/ucosiii/App/Random.c|app/src/app_pthread.c|pthread|drivers|posix|thread_pool/rt-thread/src|app/src/app_ucos.c|thread_pool/pthread" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

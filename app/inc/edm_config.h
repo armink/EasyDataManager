@@ -15,4 +15,6 @@
 #define EDM_USING_RTT
 //#define EDM_USING_UCOS
 
+#define EDM_DEBUG                     1
+
 #endif /* EDM_CONFIG_H_ */

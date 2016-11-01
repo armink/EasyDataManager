@@ -10,6 +10,17 @@
 
 #ifdef EDM_USING_RTT
 
+#define assert     ELOG_ASSERT
+#define log_e(...) elog_e("edm.threadpool", __VA_ARGS__)
+#define log_w(...) elog_w("edm.threadpool", __VA_ARGS__)
+#define log_i(...) elog_i("edm.threadpool", __VA_ARGS__)
+
+#if EDM_DEBUG
+    #define log_d(...) elog_d("edm.threadpool", __VA_ARGS__)
+#else
+    #define log_d(...)
+#endif
+
 static ThreadPoolErrCode addTask(pThreadPool const pool, void *(*process)(void *arg), void *arg);
 static ThreadPoolErrCode destroy(pThreadPool pool);
 static void threadJob(void* arg);
@@ -32,42 +43,42 @@ ThreadPoolErrCode initThreadPool(pThreadPool const pool, const char* name, uint8
     char jobName[THREAD_POOL_NAME_MAX] = {0};
     uint8_t i ;
 
-    RT_ASSERT(name);
-    RT_ASSERT(strlen(name) <= THREAD_POOL_NAME_MAX);
-    RT_ASSERT(maxThreadNum <= THREAD_POOL_MAX_THREAD_NUM);
+    assert(name);
+    assert(strlen(name) <= THREAD_POOL_NAME_MAX);
+    assert(maxThreadNum <= THREAD_POOL_MAX_THREAD_NUM);
 
     strcpy(pool->name, name);
     strcpy(jobName, name);
     strcpy(&jobName[strlen(jobName)],"_job");
 
     pool->queueLock = rt_mutex_create("queueLock", RT_IPC_FLAG_FIFO);
-    RT_ASSERT(pool->queueLock != NULL);
+    assert(pool->queueLock != NULL);
     pool->userLock = rt_mutex_create("userLock", RT_IPC_FLAG_FIFO);
-    RT_ASSERT(pool->userLock != NULL);
+    assert(pool->userLock != NULL);
     pool->queueReady = rt_sem_create("queueReady", 0, RT_IPC_FLAG_FIFO);
-    RT_ASSERT(pool->queueReady != NULL);
+    assert(pool->queueReady != NULL);
     pool->queueHead = NULL;
     pool->maxThreadNum = maxThreadNum;
     pool->curWaitThreadNum = 0;
-    pool->isShutdown = FALSE;
+    pool->isShutdown = false;
     pool->addTask = addTask;
     pool->delAll = delAll;
     pool->destroy = destroy;
     pool->lock = syncLock;
     pool->unlock = syncUnlock;
     pool->threadID = (rt_thread_t*) rt_malloc(maxThreadNum * sizeof(rt_thread_t));
-    RT_ASSERT(pool->threadID != NULL);
+    assert(pool->threadID != NULL);
     for (i = 0; i < maxThreadNum; i++) {
         jobName[strlen(jobName)] = '0' + i;
         pool->threadID[i] = rt_thread_create(jobName, threadJob, pool, threadStackSize,
         THREAD_POOL_JOB_DEFAULT_PRIORITY, THREAD_POOL_JOB_TICK * i);
-        RT_ASSERT(pool->threadID[i] != NULL);
+        assert(pool->threadID[i] != NULL);
         rt_thread_startup(pool->threadID[i]);
         jobName[strlen(jobName) - 1] = '\0';
-        LogD("create thread success.Current total thread number is %d", i + 1);
+        log_d("create thread success.Current total thread number is %d", i + 1);
         rt_thread_delay(THREAD_POOL_THREADS_INIT_TIME);
     }
-    LogD("initialize thread pool success!");
+    log_d("initialize thread pool success!");
 
     return errorCode;
 }
@@ -85,7 +96,10 @@ static ThreadPoolErrCode addTask(pThreadPool const pool, void *(*process)(void *
 	ThreadPoolErrCode errorCode = THREAD_POOL_NO_ERR;
 	pTask member = NULL;
 	pTask newtask = (pTask) rt_malloc(sizeof(Task));
-	RT_ASSERT(newtask != NULL);
+    if (!newtask) {
+        log_w("Memory full!");
+        return THREAD_POOL_MEM_FULL_ERR;
+    }
 	newtask->process = process;
 	newtask->arg = arg;
 	newtask->next = NULL;
@@ -107,7 +121,7 @@ static ThreadPoolErrCode addTask(pThreadPool const pool, void *(*process)(void *
 	rt_mutex_release(pool->queueLock);
 	/* wake up a waiting thread to process task */
 	rt_sem_release(pool->queueReady);
-	LogD("add a task to task queue success.");
+	log_d("add a task to task queue success.");
 	return errorCode;
 }
 
@@ -119,7 +133,7 @@ static ThreadPoolErrCode addTask(pThreadPool const pool, void *(*process)(void *
  * @return error code
  */
 static ThreadPoolErrCode delAll(pThreadPool const pool) {
-    ThreadPoolErrCode errorCode = THREAD_POOL_NO_TASK;
+    ThreadPoolErrCode errorCode = THREAD_POOL_NO_ERR;
 
     rt_mutex_take(pool->queueLock, RT_WAITING_FOREVER);
     /* delete all task in queue */
@@ -133,7 +147,7 @@ static ThreadPoolErrCode delAll(pThreadPool const pool) {
         }
     }
     rt_sem_control(pool->queueReady, RT_IPC_CMD_RESET, NULL);
-    LogD("delete all wait task success");
+    log_d("delete all wait task success");
     rt_mutex_release(pool->queueLock);
     return errorCode;
 }
@@ -153,7 +167,7 @@ static ThreadPoolErrCode destroy(pThreadPool pool) {
         errorCode = THREAD_POOL_ALREADY_SHUTDOWN_ERR;
     }
     if (errorCode == THREAD_POOL_NO_ERR) {
-        pool->isShutdown = TRUE;
+        pool->isShutdown = true;
         /* wait all thread exit */
         for (i = 0; i < pool->maxThreadNum; i++) {
             rt_thread_delete(pool->threadID[i]);
@@ -174,7 +188,7 @@ static ThreadPoolErrCode destroy(pThreadPool pool) {
         /* destroy mutex */
         rt_mutex_delete(pool->userLock);
         pool = NULL;
-        LogD("Thread pool destroy success");
+        log_d("Thread pool destroy success");
     }
     return errorCode;
 }
@@ -188,7 +202,7 @@ static ThreadPoolErrCode destroy(pThreadPool pool) {
 static void threadJob(void* arg) {
     pThreadPool pool = NULL;
     pTask task = NULL;
-    LogD("threadJob is running");
+    log_d("threadJob is running");
     while (1) {
         pool = (pThreadPool) arg;
         /* lock thread pool */
@@ -198,7 +212,7 @@ static void threadJob(void* arg) {
          * Before thread block the queueLock will unlock.
          * After thread wake up ,the queueLock will relock.*/
         while (pool->curWaitThreadNum == 0 && !pool->isShutdown) {
-            LogD("the thread waiting for task add to task queue");
+            log_d("the thread waiting for task add to task queue");
             /* ququeReady is NULL,the thread will block */
             if(pool->queueReady->value == 0){
                 rt_mutex_release(pool->queueLock);
@@ -212,8 +226,8 @@ static void threadJob(void* arg) {
             rt_mutex_release(pool->queueLock);
             return;
         }
-        RT_ASSERT(pool->curWaitThreadNum != 0);
-        RT_ASSERT(pool->queueHead != NULL);
+        assert(pool->curWaitThreadNum != 0);
+        assert(pool->queueHead != NULL);
         /* load task to thread job */
         pool->curWaitThreadNum--;
         task = pool->queueHead;

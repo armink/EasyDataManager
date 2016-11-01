@@ -13,19 +13,12 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
-#include <assert.h>
 #include <string.h>
-#include "log.h"
-#include "cache.h"
-#include "edm_config.h"
+#include <rthw.h>
+#include <rtthread.h>
+#include <edm_def.h>
 
-#if defined(EDM_USING_PTHREAD)
-#include "pthread_pool.h"
-#elif defined(EDM_USING_RTT)
-#include "rtthread_pool.h"
-#endif
-
-#define REFRESHER_JOB_NAME_MAX        CACHE_NAME_MAX   /**< refresher job max name length */
+#define REFRESHER_JOB_NAME_MAX           RT_NAME_MAX   /**< refresher job max name length */
 #define REFRESHER_JOB_CONTINUES_RUN               -1   /**< If priority is -1.The job will continuous running. */
 
 /* refresher error code */
@@ -33,6 +26,7 @@ typedef enum{
     REFRESHER_NO_ERR,                 /**< no error */
     REFRESHER_NO_JOB,                 /**< refresher doesn't have job */
     REFRESHER_JOB_NAME_ERROR,         /**< job has name error */
+    REFRESHER_MEM_FULL_ERR,           /**< memory full */
 }RefresherErrCode;
 
 /* RefreshJob is an auto refresh job for a Cache data. */
@@ -41,7 +35,7 @@ typedef struct _RefreshJob{
     int16_t times;                        /**< job running times.If it is -1,the job will continuous running. */
     uint8_t priority;                     /**< refresh priority.The highest priority is 0. */
     uint8_t period;                       /**< refresh time = period * refresher tick. @see Refresher.tickTime */
-    bool_t newThread;                     /**< time-consuming or block job set it true will be better. */
+    bool   newThread;                     /**< time-consuming or block job set it true will be better. */
     rt_thread_t threadID;                 /**< job running thread ID */
     void (*refreshProcess)(void *arg);    /**< it will call when the RefreshJob need wrok */
     struct _RefreshJob* next;             /**< point to next RefreshJob */
@@ -71,7 +65,7 @@ typedef struct _Refresher {
      * @return error code
      */
     RefresherErrCode (*add)(struct _Refresher* const refresher, const char* name, int8_t priority, uint8_t period,
-            int16_t times, bool_t newThread, uint32_t satckSize, void (*refreshProcess)(void *arg));
+            int16_t times, bool newThread, uint32_t satckSize, void (*refreshProcess)(void *arg));
     /**
      * delete a job in refresher.
      *

@@ -14,10 +14,8 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
-#include <assert.h>
 #include <string.h>
-#include "log.h"
-#include "edm_config.h"
+#include <edm_def.h>
 
 #if defined(EDM_USING_PTHREAD)
 #include "pthread_pool.h"

@@ -1082,7 +1082,7 @@ void rt_hw_console_output(const char *str)
 void rt_hw_console_output(const char *str)
 #endif
 {
-	printf("%s",str);
+
 }
 RTM_EXPORT(rt_hw_console_output);
 
@@ -1116,8 +1116,7 @@ void rt_kprintf(const char *fmt, ...)
         rt_device_write(_console_device, 0, rt_log_buf, length);
     }
 #else
-//    rt_hw_console_output(rt_log_buf);
-    printf("%s",rt_log_buf);
+    rt_hw_console_output(rt_log_buf);
 #endif
     va_end(args);
 }
