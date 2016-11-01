@@ -27,6 +27,7 @@
 /* thread pool error code */
 typedef enum{
     THREAD_POOL_NO_ERR,                 /**< no error */
+    THREAD_POOL_NO_TASK,                 /**< no task */
     THREAD_POOL_ALREADY_SHUTDOWN_ERR,   /**< thread pool already shutdown */
 }ThreadPoolErrCode;
 
@@ -59,6 +60,14 @@ typedef struct _ThreadPool{
      */
     ThreadPoolErrCode (*addTask)(struct _ThreadPool* const pool,
             void *(*process)(void *arg), void *arg);
+    /**
+     * This function will delete all task.
+     *
+     * @param pool
+     *
+     * @return error code
+     */
+    ThreadPoolErrCode (*delAll)(struct _ThreadPool* const pool);
     /**
      * This function will destroy thread pool.
      *

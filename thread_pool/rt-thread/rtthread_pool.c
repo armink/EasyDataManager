@@ -10,13 +10,12 @@
 
 #ifdef EDM_USING_RTT
 
-static ThreadPoolErrCode addTask(pThreadPool const pool,
-        void *(*process)(void *arg), void *arg);
+static ThreadPoolErrCode addTask(pThreadPool const pool, void *(*process)(void *arg), void *arg);
 static ThreadPoolErrCode destroy(pThreadPool pool);
 static void threadJob(void* arg);
 static void syncLock(pThreadPool pool);
 static void syncUnlock(pThreadPool pool);
-
+static ThreadPoolErrCode delAll(pThreadPool const pool);
 /**
  * This function will initialize the thread pool.
  *
@@ -52,10 +51,11 @@ ThreadPoolErrCode initThreadPool(pThreadPool const pool, const char* name, uint8
     pool->curWaitThreadNum = 0;
     pool->isShutdown = FALSE;
     pool->addTask = addTask;
+    pool->delAll = delAll;
     pool->destroy = destroy;
     pool->lock = syncLock;
     pool->unlock = syncUnlock;
-    pool->threadID = (rt_thread_t*) malloc(maxThreadNum * sizeof(rt_thread_t));
+    pool->threadID = (rt_thread_t*) rt_malloc(maxThreadNum * sizeof(rt_thread_t));
     RT_ASSERT(pool->threadID != NULL);
     for (i = 0; i < maxThreadNum; i++) {
         jobName[strlen(jobName)] = '0' + i;
@@ -81,34 +81,60 @@ ThreadPoolErrCode initThreadPool(pThreadPool const pool, const char* name, uint8
  *
  * @return error code
  */
-static ThreadPoolErrCode addTask(pThreadPool const pool,
-        void *(*process)(void *arg), void *arg) {
-    ThreadPoolErrCode errorCode = THREAD_POOL_NO_ERR;
-    pTask member = NULL;
-    pTask newtask = (pTask) malloc(sizeof(Task));
-    RT_ASSERT(newtask != NULL);
-    newtask->process = process;
-    newtask->arg = arg;
-    newtask->next = NULL;
-    /* lock thread pool */
+static ThreadPoolErrCode addTask(pThreadPool const pool, void *(*process)(void *arg), void *arg) {
+	ThreadPoolErrCode errorCode = THREAD_POOL_NO_ERR;
+	pTask member = NULL;
+	pTask newtask = (pTask) rt_malloc(sizeof(Task));
+	RT_ASSERT(newtask != NULL);
+	newtask->process = process;
+	newtask->arg = arg;
+	newtask->next = NULL;
+	/* lock thread pool */
+	rt_mutex_take(pool->queueLock, RT_WAITING_FOREVER);
+	member = pool->queueHead;
+	/* task queue is NULL */
+	if (member == NULL) {
+		pool->queueHead = newtask;
+	} else {
+		/* look up for queue tail */
+		while (member->next != NULL) {
+			member = member->next;
+		}
+		member->next = newtask;
+	}
+	/* add current waiting thread number */
+	pool->curWaitThreadNum++;
+	rt_mutex_release(pool->queueLock);
+	/* wake up a waiting thread to process task */
+	rt_sem_release(pool->queueReady);
+	LogD("add a task to task queue success.");
+	return errorCode;
+}
+
+/**
+ * This function will delete all wait task.
+ *
+ * @param pool the ThreadPool pointer
+ *
+ * @return error code
+ */
+static ThreadPoolErrCode delAll(pThreadPool const pool) {
+    ThreadPoolErrCode errorCode = THREAD_POOL_NO_TASK;
+
     rt_mutex_take(pool->queueLock, RT_WAITING_FOREVER);
-    member = pool->queueHead;
-    /* task queue is NULL */
-    if (member == NULL) {
-        pool->queueHead = newtask;
-    } else {
-        /* look up for queue tail */
-        while (member->next != NULL) {
-            member = member->next;
+    /* delete all task in queue */
+    for (;;) {
+        if (pool->queueHead != NULL) {
+            rt_free(pool->queueHead);
+            pool->queueHead = pool->queueHead->next;
+            pool->curWaitThreadNum--;
+        } else {
+            break;
         }
-        member->next = newtask;
     }
-    /* add current waiting thread number */
-    pool->curWaitThreadNum++;
+    rt_sem_control(pool->queueReady, RT_IPC_CMD_RESET, NULL);
+    LogD("delete all wait task success");
     rt_mutex_release(pool->queueLock);
-    /* wake up a waiting thread to process task */
-    rt_sem_release(pool->queueReady);
-    LogD("add a task to task queue success.");
     return errorCode;
 }
 
@@ -128,27 +154,25 @@ static ThreadPoolErrCode destroy(pThreadPool pool) {
     }
     if (errorCode == THREAD_POOL_NO_ERR) {
         pool->isShutdown = TRUE;
-        /* wake up all thread from broadcast */
-        /* delete mutex and semaphore then all waiting thread will wake up */
-        rt_mutex_delete(pool->queueLock);
-        rt_sem_delete(pool->queueReady);
         /* wait all thread exit */
         for (i = 0; i < pool->maxThreadNum; i++) {
             rt_thread_delete(pool->threadID[i]);
         }
+        /* wake up all thread from broadcast */
+        /* delete mutex and semaphore then all waiting thread will wake up */
+        rt_mutex_delete(pool->queueLock);
+        rt_sem_delete(pool->queueReady);
         /* release memory */
-        free(pool->threadID);
+        rt_free(pool->threadID);
         pool->threadID = NULL;
         /* destroy task queue */
         while (pool->queueHead != NULL) {
             head = pool->queueHead;
             pool->queueHead = pool->queueHead->next;
-            free(head);
+            rt_free(head);
         }
         /* destroy mutex */
         rt_mutex_delete(pool->userLock);
-        /* release memory */
-        free(pool);
         pool = NULL;
         LogD("Thread pool destroy success");
     }
@@ -198,7 +222,7 @@ static void threadJob(void* arg) {
         /* run task */
         (*(task->process))(task->arg);
         /* release memory */
-        free(task);
+        rt_free(task);
         task = NULL;
     }
 }
