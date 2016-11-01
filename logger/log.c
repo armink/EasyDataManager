@@ -40,7 +40,7 @@ void initLogger(uint8_t isOpen) {
         threadMutexInit();
     }
     isInitLog = TRUE;
-    printf("Wellcom to ues Easy Data Manager(V%ld.%02ld.%02ld) by armink. E-Mail:armink.ztl@gmail.com \n",
+    printf("Welcome to use Easy Data Manager(V%ld.%02ld.%02ld) by armink. E-Mail:armink.ztl@gmail.com \n",
             EDM_VERSION,EDM_SUBVERSION,EDM_REVISION);
     printf("Logger initialize success.\n");
 }
