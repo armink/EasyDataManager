@@ -9,23 +9,21 @@
 
 #include "refresher.h"
 
-static RefresherErrCode add(pRefresher const refresher, const char* name,
-        int8_t priority, uint8_t period, int16_t times, bool_t newThread,
-        uint32_t satckSize, void (*refreshProcess)(void *arg));
+static RefresherErrCode add(pRefresher const refresher, const char* name, int8_t priority, uint8_t period,
+        int16_t times, bool_t newThread, uint32_t satckSize, void (*refreshProcess)(void *arg));
 static RefresherErrCode del(pRefresher const refresher, const char* name);
-static RefresherErrCode setPeriodAndPriority(pRefresher const refresher,
-        const char* name, uint8_t period, int8_t priority);
-static RefresherErrCode setTimes(pRefresher const refresher,
-        const char* name, int16_t times);
+static RefresherErrCode delAll(pRefresher const refresher);
+static RefresherErrCode destroy(pRefresher const refresher);
+static RefresherErrCode setPeriodAndPriority(pRefresher const refresher, const char* name, uint8_t period,
+        int8_t priority);
+static RefresherErrCode setTimes(pRefresher const refresher, const char* name, int16_t times);
 static void kernel(void* arg);
 static pRefreshJob hasJob(pRefresher const refresher, const char* name);
 static void newThreadJob(void* arg);
-static void addReadyJobToQueue(pRefresher const refresher);
+static void addJobToReadyQueue(pRefresher const refresher);
 static pRefreshJob selectJobFromReadyQueue(pRefresher const refresher);
-static RefresherErrCode delJobInRefreshQueue(pRefresher const refresher,
-        const char* name);
-static RefresherErrCode delJobInReadyQueue(pRefresher const refresher,
-        const char* name);
+static RefresherErrCode delJobInRefreshQueue(pRefresher const refresher, const char* name);
+static RefresherErrCode delJobInReadyQueue(pRefresher const refresher, const char* name);
 
 /**
  * initialize the refresher
@@ -37,14 +35,15 @@ static RefresherErrCode delJobInReadyQueue(pRefresher const refresher,
  *
  * @return error code
  */
-RefresherErrCode initRefresher(pRefresher const refresher, uint32_t stackSize,
-        uint8_t priority, uint32_t tick) {
+RefresherErrCode initRefresher(pRefresher const refresher, uint32_t stackSize, uint8_t priority, uint32_t tick) {
     RefresherErrCode errorCode = REFRESHER_NO_ERR;
     assert(refresher != NULL);
     /* initialize refresher */
     refresher->tick = tick;
     refresher->add = add;
     refresher->del = del;
+    refresher->delAll = delAll;
+    refresher->destroy = destroy;
     refresher->setPeriodAndPriority = setPeriodAndPriority;
     refresher->setTimes = setTimes;
     refresher->queueHead = NULL;
@@ -53,8 +52,7 @@ RefresherErrCode initRefresher(pRefresher const refresher, uint32_t stackSize,
     refresher->queueLock = rt_mutex_create("refresher", RT_IPC_FLAG_FIFO);
     assert(refresher->queueLock != NULL);
     /* create and start kernel thread */
-    refresher->kernelID = rt_thread_create("refresher", kernel, refresher,
-            stackSize, priority, tick);
+    refresher->kernelID = rt_thread_create("refresher", kernel, refresher, stackSize, priority, tick);
     assert(refresher->kernelID != NULL);
     rt_thread_startup(refresher->kernelID);
     LogD("initialize refresher success");
@@ -69,13 +67,13 @@ RefresherErrCode initRefresher(pRefresher const refresher, uint32_t stackSize,
  * @see newThreadJob
  */
 static void kernel(void* arg) {
-    pRefresher refresher = (pRefresher)arg;
-    pRefreshJob job = NULL ;
-    uint32_t startTime , runningTime ;
-    while(1){
+    pRefresher refresher = (pRefresher) arg;
+    pRefreshJob job = NULL;
+    uint32_t startTime, runningTime;
+    while (1) {
         startTime = rt_tick_get();
         /* Search and add ready job to ready queue. */
-        addReadyJobToQueue(refresher);
+        addJobToReadyQueue(refresher);
         /* Ready queue may have more than one job want to run.*/
         while (1) {
             /* Select a job form ready job queue */
@@ -106,23 +104,23 @@ static void kernel(void* arg) {
  * @param refresher the refresher pointer
  *
  */
-static void addReadyJobToQueue(pRefresher const refresher) {
+static void addJobToReadyQueue(pRefresher const refresher) {
     pRefreshJob job = NULL;
     pReadyJob readyJob = NULL, readyJobTemp = NULL;
     job = refresher->queueHead;
     readyJob = refresher->readyQueueHead;
     /* the ready queue is NULL */
-    if (refresher->queueHead == NULL){
-        return ;
+    if (refresher->queueHead == NULL) {
+        return;
     }
     /* lock job queue */
     /* decrease all ready job curPeriod */
     rt_mutex_take(refresher->queueLock, RT_WAITING_FOREVER);
-    for(;;){
+    for (;;) {
         /* job find finish */
-        if (readyJob == NULL){
+        if (readyJob == NULL) {
             break;
-        }else{
+        } else {
             readyJob->curPeriod--;
             readyJob = readyJob->next;
         }
@@ -186,7 +184,7 @@ static pRefreshJob selectJobFromReadyQueue(pRefresher const refresher) {
     pReadyJob readyJob = refresher->readyQueueHead, readyJobTemp = NULL;
     uint8_t highestPriority = 255;
     /* the ready queue is NULL */
-    if (refresher->readyQueueHead == NULL){
+    if (refresher->readyQueueHead == NULL) {
         return NULL;
     }
     for (;;) {
@@ -211,14 +209,12 @@ static pRefreshJob selectJobFromReadyQueue(pRefresher const refresher) {
                 /* lock job queue */
                 rt_mutex_take(refresher->queueLock, RT_WAITING_FOREVER);
                 /* delete job */
-                if ((readyJob->job != job)&&
-                        (readyJob == refresher->readyQueueHead)) {/* queue head */
+                if ((readyJob->job != job) && (readyJob == refresher->readyQueueHead)) {/* queue head */
                     if (readyJob->next == NULL) { /* queue has one node */
                         refresher->readyQueueHead = NULL;
                         /* job will be freed in the end */
                     } else {
-                        refresher->readyQueueHead =
-                                refresher->readyQueueHead->next;
+                        refresher->readyQueueHead = refresher->readyQueueHead->next;
                         /* job will be freed in the end */
                     }
                 } else if (readyJob->next->next == NULL) { /* queue tail */
@@ -252,8 +248,7 @@ static pRefreshJob selectJobFromReadyQueue(pRefresher const refresher) {
             }
         } else {
             /* find the ready job which highest priority and period equal 0 */
-            if ((readyJob->job->priority < highestPriority)
-                    && (readyJob->curPeriod == 0)) {
+            if ((readyJob->job->priority < highestPriority) && (readyJob->curPeriod == 0)) {
                 job = readyJob->job;
                 highestPriority = readyJob->job->priority;
                 readyJobTemp = readyJob;
@@ -274,11 +269,11 @@ static void newThreadJob(void* arg) {
     pRefresher refresher = (pRefresher) arg;
     rt_thread_t thread = rt_thread_self();
     pRefreshJob job = NULL;
-    uint32_t startTime , runningTime ;
+    uint32_t startTime, runningTime;
     /* get job object */
-    job = hasJob(refresher,thread->name);
+    job = hasJob(refresher, thread->name);
     assert(job != NULL);
-    while(1){
+    while (1) {
         /* backup current system time */
         startTime = rt_tick_get();
         /* If job running times is 0 , the job will stop*/
@@ -317,7 +312,7 @@ static pRefreshJob hasJob(pRefresher const refresher, const char* name) {
     pRefreshJob member = refresher->queueHead;
     assert((name != NULL) && (strlen(name) <= REFRESHER_JOB_NAME_MAX));
     /* job queue is empty */
-    if (refresher->queueHead == NULL){
+    if (refresher->queueHead == NULL) {
         return NULL;
     }
     for (;;) {
@@ -346,9 +341,8 @@ static pRefreshJob hasJob(pRefresher const refresher, const char* name) {
  *
  * @return error code
  */
-static RefresherErrCode add(pRefresher const refresher, const char* name,
-        int8_t priority, uint8_t period, int16_t times, bool_t newThread,
-        uint32_t satckSize, void (*refreshProcess)(void *arg)) {
+static RefresherErrCode add(pRefresher const refresher, const char* name, int8_t priority, uint8_t period,
+        int16_t times, bool_t newThread, uint32_t satckSize, void (*refreshProcess)(void *arg)) {
     RefresherErrCode errorCode = REFRESHER_NO_ERR;
     pRefreshJob member = NULL;
     pRefreshJob newJob = NULL;
@@ -375,8 +369,7 @@ static RefresherErrCode add(pRefresher const refresher, const char* name,
         newJob->next = NULL;
 
         if (newThread) {/* the job need new thread to run */
-            newJob->threadID = rt_thread_create(name, newThreadJob, refresher,
-                    satckSize, priority, refresher->tick);
+            newJob->threadID = rt_thread_create(name, newThreadJob, refresher, satckSize, priority, refresher->tick);
             assert(newJob->threadID);
             rt_thread_startup(newJob->threadID);
         } else {/* the job running kernel thread */
@@ -412,8 +405,7 @@ static RefresherErrCode add(pRefresher const refresher, const char* name,
  *
  * @see delJobInReadyQueue
  */
-static RefresherErrCode delJobInRefreshQueue(pRefresher const refresher,
-        const char* name) {
+static RefresherErrCode delJobInRefreshQueue(pRefresher const refresher, const char* name) {
     RefresherErrCode errorCode = REFRESHER_NO_ERR;
     pRefreshJob member = refresher->queueHead, memberTemp = NULL;
 
@@ -452,7 +444,7 @@ static RefresherErrCode delJobInRefreshQueue(pRefresher const refresher,
         if (member == refresher->queueHead) {/* delete job is queue head */
             /* the job queue has one node */
             if (member->next == NULL) {
-                refresher->queueHead= NULL;
+                refresher->queueHead = NULL;
                 /* job will be freed in the end */
             } else { /* the job queue has more than one node*/
                 refresher->queueHead = refresher->queueHead->next;
@@ -465,7 +457,7 @@ static RefresherErrCode delJobInRefreshQueue(pRefresher const refresher,
         }
         /* the new thread job will detach thread in OS */
         if (member->newThread) {
-            rt_thread_detach(member->threadID);
+            rt_thread_delete(member->threadID);
         }
         rt_free(member);
         member = NULL;
@@ -487,8 +479,7 @@ static RefresherErrCode delJobInRefreshQueue(pRefresher const refresher,
  *
  * @see delJobInRefreshQueue
  */
-static RefresherErrCode delJobInReadyQueue(pRefresher const refresher,
-        const char* name) {
+static RefresherErrCode delJobInReadyQueue(pRefresher const refresher, const char* name) {
     RefresherErrCode errorCode = REFRESHER_NO_ERR;
     pReadyJob member = refresher->readyQueueHead, memberTemp = NULL;
 
@@ -569,6 +560,56 @@ static RefresherErrCode del(pRefresher const refresher, const char* name) {
 }
 
 /**
+ * deleted all jobs in refresher.
+ *
+ * @param refresher the refresher pointer
+ *
+ * @return error code
+ */
+static RefresherErrCode delAll(pRefresher const refresher) {
+    RefresherErrCode errorCode = REFRESHER_NO_JOB;
+    rt_mutex_take(refresher->queueLock, RT_WAITING_FOREVER);
+    for (;;) {
+        if (refresher->readyQueueHead != NULL) {
+            rt_free(refresher->readyQueueHead);
+            refresher->readyQueueHead = refresher->readyQueueHead->next;
+        } else {
+            break;
+        }
+    }
+    for (;;) {
+        if (refresher->queueHead != NULL) {
+            if (refresher->queueHead->newThread) {
+                rt_thread_delete(refresher->queueHead->threadID);
+            }
+            rt_free(refresher->queueHead);
+            refresher->queueHead = refresher->queueHead->next;
+        } else {
+            break;
+        }
+    }
+    rt_mutex_release(refresher->queueLock);
+    LogD("deleted all job in refresher.");
+    return errorCode;
+}
+
+/**
+ * destroy refresher
+ *
+ * @param refresher
+ * @return error code
+ */
+static RefresherErrCode destroy(pRefresher const refresher) {
+    RefresherErrCode errorCode = REFRESHER_NO_ERR;
+
+    refresher->delAll(refresher);
+    rt_thread_delete(refresher->kernelID);
+    rt_mutex_delete(refresher->queueLock);
+    LogD("refresher destroy success.");
+    return errorCode;
+}
+
+/**
  * set the job period and priority
  *
  * @param refresher the refresher pointer
@@ -578,15 +619,15 @@ static RefresherErrCode del(pRefresher const refresher, const char* name) {
  *
  * @return error code
  */
-static RefresherErrCode setPeriodAndPriority(pRefresher const refresher,
-        const char* name, uint8_t period, int8_t priority) {
+static RefresherErrCode setPeriodAndPriority(pRefresher const refresher, const char* name, uint8_t period,
+        int8_t priority) {
     RefresherErrCode errorCode = REFRESHER_NO_ERR;
     pRefreshJob member = refresher->queueHead;
 
     assert(refresher != NULL);
     assert(period > 0);
 
-    /* job queue doesn' have job */
+    /* job queue doesn't have job */
     if (member == NULL) {
         errorCode = REFRESHER_NO_JOB;
     }
@@ -600,7 +641,7 @@ static RefresherErrCode setPeriodAndPriority(pRefresher const refresher,
             /* the new thread job will change thread priority */
             if (member->newThread) {
                 rt_thread_control(member->threadID,
-                        RT_THREAD_CTRL_CHANGE_PRIORITY, &member->priority);
+                RT_THREAD_CTRL_CHANGE_PRIORITY, &member->priority);
             }
         } else {
             errorCode = REFRESHER_JOB_NAME_ERROR;
@@ -621,8 +662,7 @@ static RefresherErrCode setPeriodAndPriority(pRefresher const refresher,
  *
  * @return error code
  */
-static RefresherErrCode setTimes(pRefresher const refresher,
-        const char* name, int16_t times) {
+static RefresherErrCode setTimes(pRefresher const refresher, const char* name, int16_t times) {
     RefresherErrCode errorCode = REFRESHER_NO_ERR;
     pRefreshJob member = refresher->queueHead;
 
