@@ -137,6 +137,7 @@ void testCache(void){
     cache.getSize(&cache,&cacheLength,&cacheSize);
     //test destroy cache
     rt_thread_delay(1000);
+    cache.pool->delAll(cache.pool);
     cache.pool->destroy(cache.pool);
 }
 
@@ -232,7 +233,6 @@ void thread_entry_SysMonitor(void* parameter) {
 
     testRefresher();
 
-//    destroyLogger();
 //    testCachePerformance(20000);
     for (i = 0; i < 3; i++) {
         log_d("hello, world");

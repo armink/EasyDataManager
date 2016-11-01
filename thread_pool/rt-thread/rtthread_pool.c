@@ -40,8 +40,8 @@ static ThreadPoolErrCode delAll(pThreadPool const pool);
 ThreadPoolErrCode initThreadPool(pThreadPool const pool, const char* name, uint8_t maxThreadNum,
         uint32_t threadStackSize) {
     ThreadPoolErrCode errorCode = THREAD_POOL_NO_ERR;
-    char jobName[THREAD_POOL_NAME_MAX] = {0};
-    uint8_t i ;
+    char jobName[THREAD_POOL_NAME_MAX] = { 0 };
+    uint8_t i;
 
     assert(name);
     assert(strlen(name) <= THREAD_POOL_NAME_MAX);
@@ -49,7 +49,7 @@ ThreadPoolErrCode initThreadPool(pThreadPool const pool, const char* name, uint8
 
     strcpy(pool->name, name);
     strcpy(jobName, name);
-    strcpy(&jobName[strlen(jobName)],"_job");
+    strcpy(&jobName[strlen(jobName)], "_job");
 
     pool->queueLock = rt_mutex_create("queueLock", RT_IPC_FLAG_FIFO);
     assert(pool->queueLock != NULL);
@@ -93,36 +93,36 @@ ThreadPoolErrCode initThreadPool(pThreadPool const pool, const char* name, uint8
  * @return error code
  */
 static ThreadPoolErrCode addTask(pThreadPool const pool, void *(*process)(void *arg), void *arg) {
-	ThreadPoolErrCode errorCode = THREAD_POOL_NO_ERR;
-	pTask member = NULL;
-	pTask newtask = (pTask) rt_malloc(sizeof(Task));
+    ThreadPoolErrCode errorCode = THREAD_POOL_NO_ERR;
+    pTask member = NULL;
+    pTask newtask = (pTask) rt_malloc(sizeof(Task));
     if (!newtask) {
         log_w("Memory full!");
         return THREAD_POOL_MEM_FULL_ERR;
     }
-	newtask->process = process;
-	newtask->arg = arg;
-	newtask->next = NULL;
-	/* lock thread pool */
-	rt_mutex_take(pool->queueLock, RT_WAITING_FOREVER);
-	member = pool->queueHead;
-	/* task queue is NULL */
-	if (member == NULL) {
-		pool->queueHead = newtask;
-	} else {
-		/* look up for queue tail */
-		while (member->next != NULL) {
-			member = member->next;
-		}
-		member->next = newtask;
-	}
-	/* add current waiting thread number */
-	pool->curWaitThreadNum++;
-	rt_mutex_release(pool->queueLock);
-	/* wake up a waiting thread to process task */
-	rt_sem_release(pool->queueReady);
-	log_d("add a task to task queue success.");
-	return errorCode;
+    newtask->process = process;
+    newtask->arg = arg;
+    newtask->next = NULL;
+    /* lock thread pool */
+    rt_mutex_take(pool->queueLock, RT_WAITING_FOREVER);
+    member = pool->queueHead;
+    /* task queue is NULL */
+    if (member == NULL) {
+        pool->queueHead = newtask;
+    } else {
+        /* look up for queue tail */
+        while (member->next != NULL) {
+            member = member->next;
+        }
+        member->next = newtask;
+    }
+    /* add current waiting thread number */
+    pool->curWaitThreadNum++;
+    rt_mutex_release(pool->queueLock);
+    /* wake up a waiting thread to process task */
+    rt_sem_release(pool->queueReady);
+    log_d("add a task to task queue success.");
+    return errorCode;
 }
 
 /**
@@ -202,7 +202,6 @@ static ThreadPoolErrCode destroy(pThreadPool pool) {
 static void threadJob(void* arg) {
     pThreadPool pool = NULL;
     pTask task = NULL;
-    log_d("threadJob is running");
     while (1) {
         pool = (pThreadPool) arg;
         /* lock thread pool */
@@ -212,13 +211,12 @@ static void threadJob(void* arg) {
          * Before thread block the queueLock will unlock.
          * After thread wake up ,the queueLock will relock.*/
         while (pool->curWaitThreadNum == 0 && !pool->isShutdown) {
-            log_d("the thread waiting for task add to task queue");
             /* ququeReady is NULL,the thread will block */
-            if(pool->queueReady->value == 0){
+            if (pool->queueReady->value == 0) {
                 rt_mutex_release(pool->queueLock);
                 rt_sem_take(pool->queueReady, RT_WAITING_FOREVER);
                 rt_mutex_take(pool->queueLock, RT_WAITING_FOREVER);
-            }else{/* ququeReady is not NULL,the ququeReady semaphore will decrease */
+            } else {/* ququeReady is not NULL,the ququeReady semaphore will decrease */
                 rt_sem_take(pool->queueReady, RT_WAITING_FOREVER);
             }
         }
