@@ -11,13 +11,14 @@
 
 #ifdef EDM_USING_RTT
 
+#define LOG_TAG    "edm.refresher"
 #define assert     ELOG_ASSERT
-#define log_e(...) elog_e("edm.refresher", __VA_ARGS__)
-#define log_w(...) elog_w("edm.refresher", __VA_ARGS__)
-#define log_i(...) elog_i("edm.refresher", __VA_ARGS__)
+#define log_e(...) elog_e(LOG_TAG, __VA_ARGS__)
+#define log_w(...) elog_w(LOG_TAG, __VA_ARGS__)
+#define log_i(...) elog_i(LOG_TAG, __VA_ARGS__)
 
 #if EDM_DEBUG
-    #define log_d(...) elog_d("edm.refresher", __VA_ARGS__)
+    #define log_d(...) elog_d(LOG_TAG, __VA_ARGS__)
 #else
     #define log_d(...)
 #endif
