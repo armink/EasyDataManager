@@ -35,8 +35,8 @@
 #define ELOG_OUTPUT_LVL                      ELOG_LVL_VERBOSE
 /* enable assert check */
 #define ELOG_ASSERT_ENABLE
-/* log buffer size */
-#define ELOG_BUF_SIZE                        1024
+/* buffer size for every line's log */
+#define ELOG_LINE_BUF_SIZE                   1024
 /* output line number max length */
 #define ELOG_LINE_NUM_MAX_LEN                5
 /* output filter's tag max length */
@@ -45,5 +45,9 @@
 #define ELOG_FILTER_KW_MAX_LEN               16
 /* output newline sign */
 #define ELOG_NEWLINE_SIGN                    "\n"
+/* enable buffered output mode */
+#define ELOG_BUFF_OUTPUT_ENABLE
+/* buffer size for buffered output mode */
+#define ELOG_BUFF_OUTPUT_BUFF_SIZE           ELOG_LINE_BUF_SIZE * 10
 
 #endif /* _ELOG_CFG_H_ */
