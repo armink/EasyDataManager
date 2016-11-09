@@ -467,12 +467,12 @@ void elog_output(uint8_t level, const char *tag, const char *file, const char *f
         strcpy(log_buf + ELOG_LINE_BUF_SIZE - newline_len, ELOG_NEWLINE_SIGN);
     }
     /* output log */
-#if defined(ELOG_BUFF_OUTPUT_ENABLE)
-    extern void elog_buf_output(const char *log, size_t size);
-    elog_buf_output(log_buf, log_len);
-#elif defined(ELOG_ASYNC_OUTPUT_ENABLE)
+#if defined(ELOG_ASYNC_OUTPUT_ENABLE)
     extern void elog_async_output(const char *log, size_t size);
     elog_async_output(log_buf, log_len);
+#elif defined(ELOG_BUFF_OUTPUT_ENABLE)
+    extern void elog_buf_output(const char *log, size_t size);
+    elog_buf_output(log_buf, log_len);
 #else
     elog_port_output(log_buf, log_len);
 #endif

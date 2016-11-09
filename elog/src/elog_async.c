@@ -22,87 +22,139 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * Function: Logs asynchronous output and buffered output.
+ * Function: Logs asynchronous output.
  * Created on: 2016-11-06
  */
 
 #include <elog.h>
 #include <string.h>
 
-#ifdef ELOG_BUFF_OUTPUT_ENABLE
-#if !defined(ELOG_BUFF_OUTPUT_BUFF_SIZE)
-    #error "Please configure buffer size for buffered output mode (in elog_cfg.h)"
-#endif
-
-/* buffered output mode's buffer */
-static char log_buf[ELOG_BUFF_OUTPUT_BUFF_SIZE] = { 0 };
-/* log buffer current write size */
-static size_t buf_write_size = 0;
-#endif
-
 #ifdef ELOG_ASYNC_OUTPUT_ENABLE
+#if !defined(ELOG_ASYNC_OUTPUT_BUF_SIZE)
+    #error "Please configure buffer size for asynchronous output mode (in elog_cfg.h)"
 #endif
 
-void elog_async_output(const char *log, size_t size);
+#ifdef ELOG_ASYNC_OUTPUT_USING_PTHREAD
+#include <pthread.h>
+#endif
+
+/* asynchronous output mode's ring buffer */
+static char log_buf[ELOG_ASYNC_OUTPUT_BUF_SIZE] = { 0 };
+/* log ring buffer write index */
+static size_t write_index = 0;
+/* log ring buffer read index */
+static size_t read_index = 0;
 
 extern void elog_port_output(const char *log, size_t size);
 extern void elog_output_lock(void);
 extern void elog_output_unlock(void);
 
-#ifdef ELOG_BUFF_OUTPUT_ENABLE
 /**
- * output buffered logs when buffer is full
+ * asynchronous output ring buffer used size
  *
- * @param log will buffered line's log
- * @param size log size
+ * @return used size
  */
-void elog_buf_output(const char *log, size_t size) {
-    size_t write_size = 0, write_index = 0;
-
-    while (true) {
-        if (buf_write_size + size > ELOG_BUFF_OUTPUT_BUFF_SIZE) {
-            write_size = ELOG_BUFF_OUTPUT_BUFF_SIZE - buf_write_size;
-            memcpy(log_buf + buf_write_size, log + write_index, write_size);
-            write_index += write_size;
-            size -= write_size;
-            buf_write_size += write_size;
-            /* output log */
-#ifdef ELOG_ASYNC_OUTPUT_ENABLE
-            elog_async_output(log_buf, buf_write_size);
-#else
-            elog_port_output(log_buf, buf_write_size);
-#endif
-            /* reset write index */
-            buf_write_size = 0;
-        } else {
-            memcpy(log_buf + buf_write_size, log + write_index, size);
-            buf_write_size += size;
-            break;
-        }
+static size_t async_get_buf_used(void) {
+    if (write_index >= read_index) {
+        return write_index - read_index;
+    } else {
+        return ELOG_ASYNC_OUTPUT_BUF_SIZE - (read_index - write_index);
     }
 }
 
 /**
- * flush all buffered logs to output device
+ * asynchronous output ring buffer remain space
+ *
+ * @return remain space
  */
-void elog_flush(void) {
+static size_t async_get_buf_space(void) {
+    return ELOG_ASYNC_OUTPUT_BUF_SIZE - async_get_buf_used();
+}
+
+/**
+ * put log to asynchronous output ring buffer
+ *
+ * @param log put log buffer
+ * @param size log size
+ *
+ * @return put log size, the log which beyond ring buffer space will be dropped
+ */
+static size_t async_put_log(const char *log, size_t size) {
+    size_t space = 0;
     /* lock output */
     elog_output_lock();
-    /* output log */
-#ifdef ELOG_ASYNC_OUTPUT_ENABLE
-    elog_async_output(log_buf, buf_write_size);
-#else
-    elog_port_output(log_buf, buf_write_size);
-#endif
-    /* reset write index */
-    buf_write_size = 0;
-    /* unlock output */
-    elog_output_unlock();
-}
-#endif
+    space = async_get_buf_space();
+    /* no space */
+    if (!space) {
+        size = 0;
+        goto __exit;
+    }
+    /* drop some log */
+    if (space < size) {
+        size = space;
+    }
 
-#ifdef ELOG_ASYNC_OUTPUT_ENABLE
+    if (write_index + size < ELOG_ASYNC_OUTPUT_BUF_SIZE) {
+        memcpy(log_buf + write_index, log, size);
+        write_index += size;
+    } else {
+        memcpy(log_buf + write_index, log, ELOG_ASYNC_OUTPUT_BUF_SIZE - write_index);
+        memcpy(log_buf, log + ELOG_ASYNC_OUTPUT_BUF_SIZE - write_index,
+                size - (ELOG_ASYNC_OUTPUT_BUF_SIZE - write_index));
+        write_index += size - ELOG_ASYNC_OUTPUT_BUF_SIZE;
+    }
+
+__exit:
+    /* lock output */
+    elog_output_lock();
+    return size;
+}
+
+/**
+ * get log from asynchronous output ring buffer
+ *
+ * @param log get log buffer
+ * @param size log size
+ *
+ * @return get log size, the log size is less than ring buffer used size
+ */
+size_t elog_async_get_log(size_t size, char *log) {
+    size_t used = 0;
+    /* lock output */
+    elog_output_lock();
+    used = async_get_buf_used();
+    /* no log */
+    if (!used) {
+        size = 0;
+        goto __exit;
+    }
+    /* less log */
+    if (used < size) {
+        size = used;
+    }
+
+    if (read_index + size < ELOG_ASYNC_OUTPUT_BUF_SIZE) {
+        memcpy(log, log_buf + read_index, size);
+        read_index += size;
+    } else {
+        memcpy(log, log_buf + read_index, ELOG_ASYNC_OUTPUT_BUF_SIZE - read_index);
+        memcpy(log + ELOG_ASYNC_OUTPUT_BUF_SIZE - read_index, log_buf,
+                size - (ELOG_ASYNC_OUTPUT_BUF_SIZE - read_index));
+        read_index += size - ELOG_ASYNC_OUTPUT_BUF_SIZE;
+    }
+
+__exit:
+    /* lock output */
+    elog_output_lock();
+    return size;
+}
+
 void elog_async_output(const char *log, size_t size) {
-
+    async_put_log(log, size);
+    //TODO 通知日志输出端
 }
-#endif
+
+ElogErrCode elog_async_init(void) {
+}
+
+#endif /* ELOG_ASYNC_OUTPUT_ENABLE */
