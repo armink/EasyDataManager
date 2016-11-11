@@ -146,11 +146,23 @@ extern void elog_port_output_unlock(void);
  */
 ElogErrCode elog_init(void) {
     extern ElogErrCode elog_port_init(void);
+    extern ElogErrCode elog_async_init(void);
 
     ElogErrCode result = ELOG_NO_ERR;
 
     /* port initialize */
     result = elog_port_init();
+    if (result != ELOG_NO_ERR) {
+        return result;
+    }
+
+#ifdef ELOG_ASYNC_OUTPUT_ENABLE
+    result = elog_async_init();
+    if (result != ELOG_NO_ERR) {
+        return result;
+    }
+#endif
+
     /* enable the output lock */
     elog_output_lock_enabled(true);
     /* output locked status initialize */
@@ -160,6 +172,7 @@ ElogErrCode elog_init(void) {
     elog_set_text_color_enabled(false);
     /* set level is ELOG_LVL_VERBOSE */
     elog_set_filter_lvl(ELOG_LVL_VERBOSE);
+
 
     return result;
 }

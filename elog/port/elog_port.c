@@ -26,17 +26,21 @@
  * Created on: 2015-04-28
  */
 
-#include <rthw.h>
-#include <rtthread.h>
 #include <time.h>
 #include <stdio.h>
 #include <edm_def.h>
 #include <elog.h>
 
 #if defined(EDM_USING_PTHREAD)
+#include <pthread.h>
+#if defined(WIN32) || defined(WIN64)
+#include <windows.h>
+#endif
 static pthread_mutex_t _printLock;
 static pthread_mutex_t* printLock = &_printLock;
 #elif defined(EDM_USING_RTT)
+#include <rthw.h>
+#include <rtthread.h>
 static struct rt_mutex _printLock;
 static rt_mutex_t printLock = &_printLock;
 #endif
