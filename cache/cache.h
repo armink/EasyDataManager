@@ -45,7 +45,7 @@ typedef struct _CacheData{
     uint16_t* value;                    /**< the value pointer*/
     void* (*valueChangedListener)(void *arg); /**< it will call when the CacheData's value has changed */
     struct _CacheData* next;            /**< point to next CacheData */
-}CacheData, *pCacheData;
+} CacheData, *pCacheData;
 
 /* Cache supply functions set and CacheData list for app */
 typedef struct _Cache {

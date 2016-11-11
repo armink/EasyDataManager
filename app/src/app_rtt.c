@@ -190,6 +190,7 @@ void pressureRefreshProcess(void *arg){
 }
 
 void testRefresher(){
+#ifdef EDM_USING_RTT
     Refresher refresher;
     initRefresher(&refresher, 1024, 5, 50);
     refresher.add(&refresher, "Temp", 8, 2, -1, false, 512, tempRefreshProcess);
@@ -211,6 +212,7 @@ void testRefresher(){
     refresher.delAll(&refresher);
     refresher.destroy(&refresher);
     rt_thread_delay(2000);
+#endif
 }
 
 void thread_entry_SysMonitor(void* parameter) {

@@ -11,23 +11,36 @@
 
 #ifdef EDM_USING_PTHREAD
 
+#define LOG_TAG    "edm.threadpool"
+#define assert     ELOG_ASSERT
+#define log_e(...) elog_e(LOG_TAG, __VA_ARGS__)
+#define log_w(...) elog_w(LOG_TAG, __VA_ARGS__)
+#define log_i(...) elog_i(LOG_TAG, __VA_ARGS__)
+
+#if EDM_DEBUG
+    #define log_d(...) elog_d(LOG_TAG, __VA_ARGS__)
+#else
+    #define log_d(...)
+#endif
 static ThreadPoolErrCode addTask(pThreadPool const pool,
         void *(*process)(void *arg), void *arg);
 static ThreadPoolErrCode destroy(pThreadPool pool);
 static void* threadJob(void* arg);
 static void syncLock(pThreadPool pool);
 static void syncUnlock(pThreadPool pool);
+static ThreadPoolErrCode delAll(pThreadPool const pool);
 
 /**
  * This function will initialize the thread pool.
  *
  * @param pool the ThreadPool pointer
+ * @param name the ThreadPool name
  * @param maxThreadNum the max thread number in this ThreadPool
  * @param threadStackSize the thread stack size in this ThreadPool
  *
  * @return error code
  */
-ThreadPoolErrCode initThreadPool(pThreadPool const pool, uint8_t maxThreadNum, uint32_t threadStack) {
+ThreadPoolErrCode initThreadPool(pThreadPool const pool, const char* name, uint8_t maxThreadNum, uint32_t threadStack) {
     ThreadPoolErrCode errorCode = THREAD_POOL_NO_ERR;
     uint8_t i = 0;
 
@@ -41,8 +54,9 @@ ThreadPoolErrCode initThreadPool(pThreadPool const pool, uint8_t maxThreadNum, u
         pool->queueHead = NULL;
         pool->maxThreadNum = maxThreadNum;
         pool->curWaitThreadNum = 0;
-        pool->isShutdown = FALSE;
+        pool->isShutdown = false;
         pool->addTask = addTask;
+        pool->delAll = delAll;
         pool->destroy = destroy;
         pool->lock = syncLock;
         pool->unlock = syncUnlock;
@@ -50,10 +64,9 @@ ThreadPoolErrCode initThreadPool(pThreadPool const pool, uint8_t maxThreadNum, u
         assert(pool->threadID != NULL);
         for (i = 0; i < maxThreadNum; i++) {
             pthread_create(&(pool->threadID[i]), NULL, threadJob, pool);
-            LogD("create thread success.Current total thread number is %d",
-                    i + 1);
+            log_d("create thread success.Current total thread number is %d", i + 1);
         }
-        LogD("initialize thread pool success!");
+        log_d("initialize thread pool success!");
     }
     return errorCode;
 }
@@ -94,7 +107,22 @@ static ThreadPoolErrCode addTask(pThreadPool const pool, void *(*process)(void *
     pthread_mutex_unlock(&(pool->queueLock));
     /* wake up a waiting thread to process task */
     pthread_cond_signal(&(pool->queueReady));
-    LogD("add a task to task queue success.");
+    log_d("add a task to task queue success.");
+    return errorCode;
+}
+
+/**
+ * This function will delete all wait task.
+ *
+ * @param pool the ThreadPool pointer
+ *
+ * @return error code
+ */
+static ThreadPoolErrCode delAll(pThreadPool const pool) {
+    ThreadPoolErrCode errorCode = THREAD_POOL_NO_ERR;
+
+    //fixme
+
     return errorCode;
 }
 
@@ -113,12 +141,12 @@ static ThreadPoolErrCode destroy(pThreadPool pool) {
         errorCode = THREAD_POOL_ALREADY_SHUTDOWN_ERR;
     }
     if (errorCode == THREAD_POOL_NO_ERR) {
-        pool->isShutdown = TRUE;
+        pool->isShutdown = true;
         /* wake up all thread from broadcast */
         pthread_cond_broadcast(&(pool->queueReady));
         /* wait all thread exit */
         for (i = 0; i < pool->maxThreadNum; i++) {
-            LogD("Thread pool will destroy,waiting the thread exit");
+            log_d("Thread pool will destroy,waiting the thread exit");
             pthread_join(pool->threadID[i], NULL);
         }
         /* release memory */
@@ -137,7 +165,7 @@ static ThreadPoolErrCode destroy(pThreadPool pool) {
         /* release memory */
         free(pool);
         pool = NULL;
-        LogD("Thread pool destroy success");
+        log_d("Thread pool destroy success");
     }
     return errorCode;
 }
@@ -160,7 +188,7 @@ static void* threadJob(void* arg) {
          * Before thread block the queueLock will unlock.
          * After thread wake up ,the queueLock will relock.*/
         while (pool->curWaitThreadNum == 0 && !pool->isShutdown) {
-            LogD("the thread waiting for task add to task queue");
+            log_d("the thread waiting for task add to task queue");
             pthread_cond_wait(&(pool->queueReady), &(pool->queueLock));
         }
         if (pool->isShutdown) { /* thread pool will shutdown */
@@ -192,7 +220,7 @@ static void* threadJob(void* arg) {
  *
  */
 static void syncLock(pThreadPool pool) {
-//    LogD("is syncLock");
+//    log_d("is syncLock");
     pthread_mutex_lock(&(pool->userLock));
 }
 
@@ -203,7 +231,7 @@ static void syncLock(pThreadPool pool) {
  *
  */
 static void syncUnlock(pThreadPool pool) {
-//    LogD("is syncUnlock");
+//    log_d("is syncUnlock");
     pthread_mutex_unlock(&(pool->userLock));
 }
 

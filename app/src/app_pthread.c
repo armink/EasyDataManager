@@ -9,20 +9,38 @@
 
 #include "cache.h"
 #include "pthread_pool.h"
-#include "log.h"
+#include <elog.h>
 #include <stdio.h>
+
+//#if defined(WIN32) || defined(WIN64)
+//#include <windows.h>
+//#define sleep(n) Sleep(1000 * (n))
+//#else
+//#include <unistd.h>
+//#endif
+
+#define assert     ELOG_ASSERT
+#define log_e(...) elog_e("app", __VA_ARGS__)
+#define log_w(...) elog_w("app", __VA_ARGS__)
+#define log_i(...) elog_i("app", __VA_ARGS__)
+
+#if EDM_DEBUG
+    #define log_d(...) elog_d("app", __VA_ARGS__)
+#else
+    #define log_d(...)
+#endif
 
 void *valueChangedListener1(void *arg) {
     pCacheData data = (pCacheData)arg;
-    LogD("this is valueChangedListener1,the data %s was changed", data->name);
-    sleep(1);
+    log_d("this is valueChangedListener1,the data %s was changed", data->name);
+//    sleep(1);
     return NULL;
 }
 
 void *valueChangedListener2(void *arg) {
     pCacheData data = (pCacheData)arg;
-    LogD("this is valueChangedListener2,the data %s was changed", data->name);
-    sleep(1);
+    log_d("this is valueChangedListener2,the data %s was changed", data->name);
+//    sleep(1);
     return NULL;
 }
 
@@ -35,18 +53,18 @@ void testCache(void){
     valueTemp[1] = 1;
     valueTemp[2] = 2;
     valueTemp[3] = 3;
-    cache.add(&cache,"æ¸©åº¦",1,valueTemp,valueChangedListener1);
-    cache.add(&cache,"åŽ‹åŠ›",2,valueTemp,valueChangedListener2);
-    cache.add(&cache,"æ¹¿åº¦",3,valueTemp,NULL);
+    cache.add(&cache,"ÎÂ¶È",1,valueTemp,valueChangedListener1);
+    cache.add(&cache,"Ñ¹Á¦",2,valueTemp,valueChangedListener2);
+    cache.add(&cache,"Êª¶È",3,valueTemp,NULL);
     cache.add(&cache,"PM2.5",4,valueTemp,NULL);
     cache.getSize(&cache,&cacheLength,&cacheSize);
-    cache.get(&cache,"æ¸©åº¦",valueTemp);
-    cache.get(&cache,"åŽ‹åŠ›",valueTemp);
-    cache.get(&cache,"æ¹¿åº¦",valueTemp);
+    cache.get(&cache,"ÎÂ¶È",valueTemp);
+    cache.get(&cache,"Ñ¹Á¦",valueTemp);
+    cache.get(&cache,"Êª¶È",valueTemp);
     cache.get(&cache,"PM2.5",valueTemp);
-    cache.del(&cache,"æ¸©åº¦");
-    cache.del(&cache,"åŽ‹åŠ›");
-    cache.del(&cache,"æ¹¿åº¦");
+    cache.del(&cache,"ÎÂ¶È");
+    cache.del(&cache,"Ñ¹Á¦");
+    cache.del(&cache,"Êª¶È");
     cache.del(&cache,"PM2.5");
     cache.del(&cache,"PM2.5");
     cache.get(&cache,"PM2.5",valueTemp);
@@ -57,44 +75,42 @@ void testCache(void){
     valueTemp[1] = 2;
     valueTemp[2] = 1;
     valueTemp[3] = 0;
-    cache.set(&cache,"æ¸©åº¦",valueTemp);
-    cache.set(&cache,"åŽ‹åŠ›",valueTemp);
+    cache.set(&cache,"ÎÂ¶È",valueTemp);
+    cache.set(&cache,"Ñ¹Á¦",valueTemp);
     cache.set(&cache,"PM2.5",valueTemp);
 //    cache.remove(&cache,"PM2.5");
     cache.get(&cache,"PM2.5",valueTemp);
     cache.getSize(&cache,&cacheLength,&cacheSize);
 
-    sleep(5);
+//    sleep(5);
     cache.pool->destroy(cache.pool);
 }
 
 void *testProcess(void *arg) {
-    LogD("this thread arg is %d", *(uint8_t *) arg);
-    sleep(5);
+    log_d("this thread arg is %d", *(uint8_t *) arg);
+//    sleep(5);
     return NULL;
 }
 
-void testThreadPoll(void){
-    uint8_t i , dataTemp[10];
-    ThreadPool pool;
-    initThreadPool(&pool, 4);
-    for (i = 0; i < 10; i++) {
-        dataTemp[i] = i;
-        pool.addTask(&pool,testProcess,&dataTemp[i]);
-    }
-    sleep(20);
-    pool.destroy(&pool);
-}
 int main()
 {
     /* close printf buffer */
     setbuf(stdout, NULL);
-    initLogger(TRUE);
+    /* EasyLogger library initialize */
+    elog_init();
+    elog_set_fmt(ELOG_LVL_ASSERT, ELOG_FMT_ALL & ~ELOG_FMT_P_INFO);
+    elog_set_fmt(ELOG_LVL_ERROR, ELOG_FMT_ALL & ~ELOG_FMT_P_INFO);
+    elog_set_fmt(ELOG_LVL_WARN, ELOG_FMT_ALL & ~ELOG_FMT_P_INFO);
+    elog_set_fmt(ELOG_LVL_INFO, ELOG_FMT_LVL | ELOG_FMT_TAG | ELOG_FMT_TIME);
+    elog_set_fmt(ELOG_LVL_DEBUG, ELOG_FMT_ALL & ~(ELOG_FMT_FUNC | ELOG_FMT_P_INFO));
+    elog_set_fmt(ELOG_LVL_VERBOSE, ELOG_FMT_ALL & ~(ELOG_FMT_FUNC | ELOG_FMT_P_INFO));
+    elog_set_filter_lvl(ELOG_LVL_VERBOSE);
+//    elog_set_text_color_enabled(true);
+    /* start EasyLogger */
+    elog_start();
 //    while (1) {
-        testCache();
+    testCache();
 //        sleep(1);
 //    }
-//    testThreadPoll();
-    destroyLogger();
     return 0;
 }

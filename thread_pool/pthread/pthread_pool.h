@@ -18,13 +18,6 @@
 
 #ifdef EDM_USING_PTHREAD
 
-#if defined(WIN32) || defined(WIN64)
-#include <windows.h>
-#define sleep(n) Sleep(1000 * (n))
-#else
-#include <unistd.h>
-#endif
-
 #define THREAD_POOL_MAX_THREAD_NUM      16    /**< thread pool max setting thread number */
 
 /* thread pool error code */
@@ -51,14 +44,50 @@ typedef struct _ThreadPool{
     pthread_t* threadID;        /**< thread queue which in thread pool */
     uint8_t maxThreadNum;       /**< the thread max number in thread pool */
     uint8_t curWaitThreadNum;   /**< the current waiting thread number in thread pool */
+    /**
+     * This function will add a task to thread pool.
+     *
+     * @param pool the ThreadPool pointer
+     * @param process task function pointer
+     * @param arg task function arguments
+     *
+     * @return error code
+     */
     ThreadPoolErrCode (*addTask)(struct _ThreadPool* const pool,
             void *(*process)(void *arg), void *arg);
+    /**
+     * This function will delete all task.
+     *
+     * @param pool
+     *
+     * @return error code
+     */
+    ThreadPoolErrCode (*delAll)(struct _ThreadPool* const pool);
+    /**
+     * This function will destroy thread pool.
+     *
+     * @param pool the ThreadPool pointer
+     *
+     * @return error code
+     */
     ThreadPoolErrCode (*destroy)(struct _ThreadPool* pool);
+    /**
+     * This function will lock the synchronized lock.
+     *
+     * @param pool the ThreadPool pointer
+     *
+     */
     void (*lock)(struct _ThreadPool* pool);
+    /**
+     * This function will unlock the synchronized lock.
+     *
+     * @param pool the ThreadPool pointer
+     *
+     */
     void (*unlock)(struct _ThreadPool* pool);
 } ThreadPool,*pThreadPool;
 
-ThreadPoolErrCode initThreadPool(pThreadPool const pool, uint8_t maxThreadNum, uint32_t threadStack);
+ThreadPoolErrCode initThreadPool(pThreadPool const pool, const char* name, uint8_t maxThreadNum, uint32_t threadStack);
 
 #endif
 
