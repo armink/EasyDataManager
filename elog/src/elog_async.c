@@ -36,6 +36,7 @@
 
 #ifdef ELOG_ASYNC_OUTPUT_USING_PTHREAD
 #include <pthread.h>
+#include <sched.h>
 /* thread default stack size */
 #ifndef ELOG_ASYNC_OUTPUT_PTHREAD_STACK_SIZE
 #if PTHREAD_STACK_MIN > 4*1024
@@ -185,6 +186,7 @@ static void *async_output(void *arg) {
     ELOG_ASSERT(init_ok);
 
     while(true) {
+        pthread_mutex_lock(&put_notice_lock);
         /* waiting log */
         pthread_cond_wait(&put_notice, &put_notice_lock);
         /* polling gets and outputs the log */
@@ -196,6 +198,7 @@ static void *async_output(void *arg) {
                 break;
             }
         }
+        pthread_mutex_unlock(&put_notice_lock);
         //TODO 测试优先级等属性
     }
     return NULL;
