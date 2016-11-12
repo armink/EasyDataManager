@@ -37,12 +37,13 @@
 #ifdef ELOG_ASYNC_OUTPUT_USING_PTHREAD
 #include <pthread.h>
 #include <sched.h>
+#include <semaphore.h>
 /* thread default stack size */
 #ifndef ELOG_ASYNC_OUTPUT_PTHREAD_STACK_SIZE
 #if PTHREAD_STACK_MIN > 4*1024
 #define ELOG_ASYNC_OUTPUT_PTHREAD_STACK_SIZE     PTHREAD_STACK_MIN
 #else
-#define ELOG_ASYNC_OUTPUT_PTHREAD_STACK_SIZE     (4*1024)
+#define ELOG_ASYNC_OUTPUT_PTHREAD_STACK_SIZE     (1*1024)
 #endif
 /* thread default priority */
 #ifndef ELOG_ASYNC_OUTPUT_PTHREAD_PRIORITY
@@ -51,9 +52,7 @@
 #endif /* ELOG_ASYNC_OUTPUT_USING_PTHREAD */
 
 /* put log notice */
-static pthread_cond_t put_notice;
-/* put log notice lock */
-static pthread_mutex_t put_notice_lock;
+static sem_t put_notice;
 /* asynchronous output pthread thread */
 static pthread_t async_output_thread;
 #endif
@@ -173,7 +172,7 @@ void elog_async_output(const char *log, size_t size) {
     async_put_log(log, size);
     /* notify output log thread */
 #ifdef ELOG_ASYNC_OUTPUT_USING_PTHREAD
-    pthread_cond_signal(&put_notice);
+    sem_post(&put_notice);
 #endif
     //TODO 构思非 pthread 模式的移植方法
 }
@@ -186,9 +185,8 @@ static void *async_output(void *arg) {
     ELOG_ASSERT(init_ok);
 
     while(true) {
-        pthread_mutex_lock(&put_notice_lock);
         /* waiting log */
-        pthread_cond_wait(&put_notice, &put_notice_lock);
+        sem_wait(&put_notice);
         /* polling gets and outputs the log */
         while(true) {
             get_log_size = elog_async_get_log(poll_get_buf, ELOG_LINE_BUF_SIZE);
@@ -198,8 +196,6 @@ static void *async_output(void *arg) {
                 break;
             }
         }
-        pthread_mutex_unlock(&put_notice_lock);
-        //TODO 测试优先级等属性
     }
     return NULL;
 }
@@ -221,8 +217,7 @@ ElogErrCode elog_async_init(void) {
     pthread_attr_t thread_attr;
     struct sched_param thread_sched_param;
 
-    pthread_cond_init(&put_notice, NULL);
-    pthread_mutex_init(&put_notice_lock, NULL);
+    sem_init(&put_notice, 0, 0);
 
     pthread_attr_init(&thread_attr);
     pthread_attr_setdetachstate(&thread_attr, PTHREAD_CREATE_DETACHED);
