@@ -55,8 +55,8 @@
 #endif
 #endif /* ELOG_ASYNC_OUTPUT_USING_PTHREAD */
 
-/* put log notice */
-static sem_t put_notice;
+/* asynchronous output log notice */
+static sem_t output_notice;
 /* asynchronous output pthread thread */
 static pthread_t async_output_thread;
 #endif
@@ -189,19 +189,22 @@ __exit:
 }
 
 void elog_async_output(const char *log, size_t size) {
+    /* this function must be implement by user when ELOG_ASYNC_OUTPUT_USING_PTHREAD is not defined */
+    extern void elog_async_output_notice(void);
     size_t put_size;
 
     put_size = async_put_log(log, size);
     /* notify output log thread */
-#ifdef ELOG_ASYNC_OUTPUT_USING_PTHREAD
     if (put_size > 0) {
-        sem_post(&put_notice);
+        elog_async_output_notice();
     }
-#endif
-    //TODO 构思非 pthread 模式的移植方法
 }
 
 #ifdef ELOG_ASYNC_OUTPUT_USING_PTHREAD
+void elog_async_output_notice(void) {
+    sem_post(&output_notice);
+}
+
 static void *async_output(void *arg) {
     size_t get_log_size = 0;
     static char poll_get_buf[ELOG_ASYNC_POLL_GET_LOG_BUF_SIZE];
@@ -210,7 +213,7 @@ static void *async_output(void *arg) {
 
     while(true) {
         /* waiting log */
-        sem_wait(&put_notice);
+        sem_wait(&output_notice);
         /* polling gets and outputs the log */
         while(true) {
             get_log_size = elog_async_get_log(poll_get_buf, sizeof(poll_get_buf));
@@ -241,7 +244,7 @@ ElogErrCode elog_async_init(void) {
     pthread_attr_t thread_attr;
     struct sched_param thread_sched_param;
 
-    sem_init(&put_notice, 0, 0);
+    sem_init(&output_notice, 0, 0);
 
     pthread_attr_init(&thread_attr);
     pthread_attr_setdetachstate(&thread_attr, PTHREAD_CREATE_DETACHED);

@@ -43,6 +43,9 @@ static pthread_mutex_t* printLock = &_printLock;
 #include <rtthread.h>
 static struct rt_mutex _printLock;
 static rt_mutex_t printLock = &_printLock;
+static struct rt_semaphore output_notice;
+
+static void async_output(void *arg);
 #endif
 
 /**
@@ -56,7 +59,15 @@ ElogErrCode elog_port_init(void) {
     pthread_mutex_init(printLock, NULL);
 
 #elif defined(EDM_USING_RTT)
+    rt_thread_t async_thread = NULL;
+
     rt_mutex_init(printLock, "elog", RT_IPC_FLAG_PRIO);
+    rt_sem_init(&output_notice, "elog async", 0, RT_IPC_FLAG_PRIO);
+
+    async_thread = rt_thread_create("elog_async", async_output, NULL, 1024, RT_THREAD_PRIORITY_MAX - 1, 10);
+    if (async_thread) {
+        rt_thread_startup(async_thread);
+    }
 #endif
 
     printf("Welcome to use Easy Data Manager(V%s) by armink. E-Mail: armink.ztl@gmail.com \n", EDM_VERSION);
@@ -67,6 +78,29 @@ ElogErrCode elog_port_init(void) {
 #if defined(EDM_USING_RTT)
 void rt_hw_console_output(const char *str) {
     printf("%s", str);
+}
+
+void elog_async_output_notice(void) {
+    rt_sem_release(&output_notice);
+}
+
+static void async_output(void *arg) {
+    size_t get_log_size = 0;
+    static char poll_get_buf[ELOG_LINE_BUF_SIZE - 4];
+
+    while(true) {
+        /* waiting log */
+        rt_sem_take(&output_notice, RT_WAITING_FOREVER);
+        /* polling gets and outputs the log */
+        while(true) {
+            get_log_size = elog_async_get_log(poll_get_buf, sizeof(poll_get_buf));
+            if (get_log_size) {
+                elog_port_output(poll_get_buf, get_log_size);
+            } else {
+                break;
+            }
+        }
+    }
 }
 #endif
 
