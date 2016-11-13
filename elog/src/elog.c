@@ -314,6 +314,7 @@ void elog_output_unlock(void) {
  */
 void elog_raw(const char *format, ...) {
     va_list args;
+    size_t log_len = 0;
     int fmt_result;
 
     /* check output enabled */
@@ -332,13 +333,20 @@ void elog_raw(const char *format, ...) {
 
     /* output converted log */
     if ((fmt_result > -1) && (fmt_result <= ELOG_LINE_BUF_SIZE)) {
-        /* output log */
-        elog_port_output(log_buf, fmt_result);
+        log_len = fmt_result;
     } else {
-        /* output log */
-        elog_port_output(log_buf, ELOG_LINE_BUF_SIZE);
+        log_len = ELOG_LINE_BUF_SIZE;
     }
-
+    /* output log */
+#if defined(ELOG_ASYNC_OUTPUT_ENABLE)
+    extern void elog_async_output(const char *log, size_t size);
+    elog_async_output(log_buf, log_len);
+#elif defined(ELOG_BUFF_OUTPUT_ENABLE)
+    extern void elog_buf_output(const char *log, size_t size);
+    elog_buf_output(log_buf, log_len);
+#else
+    elog_port_output(log_buf, log_len);
+#endif
     /* unlock output */
     elog_port_output_unlock();
 

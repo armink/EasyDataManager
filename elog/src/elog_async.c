@@ -49,6 +49,10 @@
 #ifndef ELOG_ASYNC_OUTPUT_PTHREAD_PRIORITY
 #define ELOG_ASYNC_OUTPUT_PTHREAD_PRIORITY       (sched_get_priority_max(SCHED_RR) - 1)
 #endif
+/* output thread poll get log buffer size  */
+#ifndef ELOG_ASYNC_POLL_GET_LOG_BUF_SIZE
+#define ELOG_ASYNC_POLL_GET_LOG_BUF_SIZE         (ELOG_LINE_BUF_SIZE - 4)
+#endif
 #endif /* ELOG_ASYNC_OUTPUT_USING_PTHREAD */
 
 /* put log notice */
@@ -65,6 +69,10 @@ static char log_buf[ELOG_ASYNC_OUTPUT_BUF_SIZE] = { 0 };
 static size_t write_index = 0;
 /* log ring buffer read index */
 static size_t read_index = 0;
+/* log ring buffer full flag */
+static bool buf_is_full = false;
+/* log ring buffer empty flag */
+static bool buf_is_empty = true;
 
 extern void elog_port_output(const char *log, size_t size);
 extern void elog_output_lock(void);
@@ -76,10 +84,16 @@ extern void elog_output_unlock(void);
  * @return used size
  */
 static size_t elog_async_get_buf_used(void) {
-    if (write_index >= read_index) {
+    if (write_index > read_index) {
         return write_index - read_index;
     } else {
-        return ELOG_ASYNC_OUTPUT_BUF_SIZE - (read_index - write_index);
+        if (!buf_is_full && !buf_is_empty) {
+            return ELOG_ASYNC_OUTPUT_BUF_SIZE - (read_index - write_index);
+        } else if (buf_is_full) {
+            return ELOG_ASYNC_OUTPUT_BUF_SIZE;
+        } else {
+            return 0;
+        }
     }
 }
 
@@ -110,8 +124,9 @@ static size_t async_put_log(const char *log, size_t size) {
         goto __exit;
     }
     /* drop some log */
-    if (space < size) {
+    if (space <= size) {
         size = space;
+        buf_is_full = true;
     }
 
     if (write_index + size < ELOG_ASYNC_OUTPUT_BUF_SIZE) {
@@ -123,6 +138,8 @@ static size_t async_put_log(const char *log, size_t size) {
                 size - (ELOG_ASYNC_OUTPUT_BUF_SIZE - write_index));
         write_index += size - ELOG_ASYNC_OUTPUT_BUF_SIZE;
     }
+
+    buf_is_empty = false;
 
 __exit:
 
@@ -148,8 +165,9 @@ size_t elog_async_get_log(char *log, size_t size) {
         goto __exit;
     }
     /* less log */
-    if (used < size) {
+    if (used <= size) {
         size = used;
+        buf_is_empty = true;
     }
 
     if (read_index + size < ELOG_ASYNC_OUTPUT_BUF_SIZE) {
@@ -162,6 +180,8 @@ size_t elog_async_get_log(char *log, size_t size) {
         read_index += size - ELOG_ASYNC_OUTPUT_BUF_SIZE;
     }
 
+    buf_is_full = false;
+
 __exit:
     /* lock output */
     elog_output_unlock();
@@ -169,10 +189,14 @@ __exit:
 }
 
 void elog_async_output(const char *log, size_t size) {
-    async_put_log(log, size);
+    size_t put_size;
+
+    put_size = async_put_log(log, size);
     /* notify output log thread */
 #ifdef ELOG_ASYNC_OUTPUT_USING_PTHREAD
-    sem_post(&put_notice);
+    if (put_size > 0) {
+        sem_post(&put_notice);
+    }
 #endif
     //TODO 构思非 pthread 模式的移植方法
 }
@@ -180,7 +204,7 @@ void elog_async_output(const char *log, size_t size) {
 #ifdef ELOG_ASYNC_OUTPUT_USING_PTHREAD
 static void *async_output(void *arg) {
     size_t get_log_size = 0;
-    static char poll_get_buf[ELOG_LINE_BUF_SIZE];
+    static char poll_get_buf[ELOG_ASYNC_POLL_GET_LOG_BUF_SIZE];
 
     ELOG_ASSERT(init_ok);
 
@@ -189,7 +213,7 @@ static void *async_output(void *arg) {
         sem_wait(&put_notice);
         /* polling gets and outputs the log */
         while(true) {
-            get_log_size = elog_async_get_log(poll_get_buf, ELOG_LINE_BUF_SIZE);
+            get_log_size = elog_async_get_log(poll_get_buf, sizeof(poll_get_buf));
             if (get_log_size) {
                 elog_port_output(poll_get_buf, get_log_size);
             } else {
