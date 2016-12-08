@@ -289,7 +289,9 @@ static void newThreadJob(void* arg) {
     uint32_t startTime, runningTime;
     /* get job object */
     job = hasJob(refresher, thread->name);
-    assert(job != NULL);
+    if (job == NULL) {
+        return;
+    }
     while (1) {
         /* backup current system time */
         startTime = rt_tick_get();
