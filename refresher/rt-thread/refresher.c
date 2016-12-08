@@ -23,12 +23,12 @@
     #define log_d(...)
 #endif
 
-static RefresherErrCode add(pRefresher const refresher, const char* name, int8_t priority, uint8_t period,
+static RefresherErrCode add(pRefresher const refresher, const char* name, int8_t priority, uint32_t period,
         int16_t times, bool newThread, uint32_t satckSize, void (*refreshProcess)(void *arg));
 static RefresherErrCode del(pRefresher const refresher, const char* name);
 static RefresherErrCode delAll(pRefresher const refresher);
 static RefresherErrCode destroy(pRefresher const refresher);
-static RefresherErrCode setPeriodAndPriority(pRefresher const refresher, const char* name, uint8_t period,
+static RefresherErrCode setPeriodAndPriority(pRefresher const refresher, const char* name, uint32_t period,
         int8_t priority);
 static RefresherErrCode setTimes(pRefresher const refresher, const char* name, int16_t times);
 static void kernel(void* arg);
@@ -358,7 +358,7 @@ static pRefreshJob hasJob(pRefresher const refresher, const char* name) {
  *
  * @return error code
  */
-static RefresherErrCode add(pRefresher const refresher, const char* name, int8_t priority, uint8_t period,
+static RefresherErrCode add(pRefresher const refresher, const char* name, int8_t priority, uint32_t period,
         int16_t times, bool newThread, uint32_t satckSize, void (*refreshProcess)(void *arg)) {
     RefresherErrCode errorCode = REFRESHER_NO_ERR;
     pRefreshJob member = NULL;
@@ -574,10 +574,8 @@ static RefresherErrCode delJobInReadyQueue(pRefresher const refresher, const cha
  */
 static RefresherErrCode del(pRefresher const refresher, const char* name) {
     RefresherErrCode errorCode = REFRESHER_NO_ERR;
-    errorCode = delJobInReadyQueue(refresher, name);
-    if (errorCode == REFRESHER_NO_ERR) {
-        delJobInRefreshQueue(refresher, name);
-    }
+    delJobInReadyQueue(refresher, name);
+    errorCode = delJobInRefreshQueue(refresher, name);
     return errorCode;
 }
 
@@ -641,7 +639,7 @@ static RefresherErrCode destroy(pRefresher const refresher) {
  *
  * @return error code
  */
-static RefresherErrCode setPeriodAndPriority(pRefresher const refresher, const char* name, uint8_t period,
+static RefresherErrCode setPeriodAndPriority(pRefresher const refresher, const char* name, uint32_t period,
         int8_t priority) {
     RefresherErrCode errorCode = REFRESHER_NO_ERR;
     pRefreshJob member = refresher->queueHead;

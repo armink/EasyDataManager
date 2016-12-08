@@ -34,7 +34,7 @@ typedef struct _RefreshJob{
     char  name[REFRESHER_JOB_NAME_MAX+1]; /**< the name of the refresher job, the end of name is include '\0'*/
     int16_t times;                        /**< job running times.If it is -1,the job will continuous running. */
     uint8_t priority;                     /**< refresh priority.The highest priority is 0. */
-    uint8_t period;                       /**< refresh time = period * refresher tick. @see Refresher.tickTime */
+    uint32_t period;                       /**< refresh time = period * refresher tick. @see Refresher.tickTime */
     bool   newThread;                     /**< time-consuming or block job set it true will be better. */
     rt_thread_t threadID;                 /**< job running thread ID */
     void (*refreshProcess)(void *arg);    /**< it will call when the RefreshJob need wrok */
@@ -44,7 +44,7 @@ typedef struct _RefreshJob{
 /* Refresher ready job in ready queue */
 typedef struct _ReadyJob{
     pRefreshJob job;                    /**< RefreshJob pointer @see RefreshJob */
-    uint8_t curPeriod;                  /**< current left period @see RefreshJob.period */
+    uint32_t curPeriod;                  /**< current left period @see RefreshJob.period */
     struct _ReadyJob* next;             /**< point to next ReadyJob */
 } ReadyJob, *pReadyJob;
 
@@ -64,7 +64,7 @@ typedef struct _Refresher {
      *
      * @return error code
      */
-    RefresherErrCode (*add)(struct _Refresher* const refresher, const char* name, int8_t priority, uint8_t period,
+    RefresherErrCode (*add)(struct _Refresher* const refresher, const char* name, int8_t priority, uint32_t period,
             int16_t times, bool newThread, uint32_t satckSize, void (*refreshProcess)(void *arg));
     /**
      * delete a job in refresher.
@@ -96,7 +96,7 @@ typedef struct _Refresher {
      *
      * @return error code
      */
-    RefresherErrCode (*setPeriodAndPriority)(struct _Refresher* const refresher, const char* name, uint8_t period,
+    RefresherErrCode (*setPeriodAndPriority)(struct _Refresher* const refresher, const char* name, uint32_t period,
             int8_t priority);
     /**
      * set the job running times
