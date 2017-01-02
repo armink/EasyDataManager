@@ -15,6 +15,7 @@
 #define log_e(...) elog_e(LOG_TAG, __VA_ARGS__)
 #define log_w(...) elog_w(LOG_TAG, __VA_ARGS__)
 #define log_i(...) elog_i(LOG_TAG, __VA_ARGS__)
+#define log_v(...) elog_v(LOG_TAG, __VA_ARGS__)
 
 #if EDM_DEBUG
     #define log_d(...) elog_d(LOG_TAG, __VA_ARGS__)
@@ -122,7 +123,7 @@ static ThreadPoolErrCode addTask(pThreadPool const pool, void *(*process)(void *
     rt_mutex_release(pool->queueLock);
     /* wake up a waiting thread to process task */
     rt_sem_release(pool->queueReady);
-    log_d("add a task to task queue success.");
+    log_v("add a task to task queue success.");
     return errorCode;
 }
 

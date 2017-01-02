@@ -16,6 +16,6 @@
 #include <elog.h>
 
 
-#define EDM_VERSION                               "3.12.08"
+#define EDM_VERSION                               "3.12.15"
 
 #endif /* _EDM_DEF_H_ */
