@@ -7,9 +7,11 @@
  * Created on: 2013-10-30
  */
 
+#define LOG_TAG    "app"
+
+#include <elog.h>
 #include "cache.h"
 #include "pthread_pool.h"
-#include <elog.h>
 #include <stdio.h>
 
 //#if defined(WIN32) || defined(WIN64)
@@ -18,17 +20,6 @@
 //#else
 //#include <unistd.h>
 //#endif
-
-#define assert     ELOG_ASSERT
-#define log_e(...) elog_e("app", __VA_ARGS__)
-#define log_w(...) elog_w("app", __VA_ARGS__)
-#define log_i(...) elog_i("app", __VA_ARGS__)
-
-#if EDM_DEBUG
-    #define log_d(...) elog_d("app", __VA_ARGS__)
-#else
-    #define log_d(...)
-#endif
 
 void *valueChangedListener1(void *arg) {
     pCacheData data = (pCacheData)arg;

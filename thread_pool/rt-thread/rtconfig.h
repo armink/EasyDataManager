@@ -89,7 +89,7 @@
 
 /* SECTION: Console options */
 /* the buffer size of console*/
-#define RT_CONSOLEBUF_SIZE	128
+#define RT_CONSOLEBUF_SIZE	256
 
 /* SECTION: component options */
 #define RT_USING_COMPONENTS_INIT

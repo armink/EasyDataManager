@@ -26,6 +26,8 @@
  * Created on: 2015-04-28
  */
 
+#define LOG_TAG      "elog"
+
 #include <elog.h>
 #include <string.h>
 #include <stdarg.h>
@@ -55,62 +57,62 @@
     #error "Please configure output newline sign (in elog_cfg.h)"
 #endif
 
+#ifdef ELOG_COLOR_ENABLE
 /**
  * CSI(Control Sequence Introducer/Initiator) sign
  * more information on https://en.wikipedia.org/wiki/ANSI_escape_code
  */
-#define CSI_START                                   "\033["
-#define CSI_END                                   "\033[0m"
+#define CSI_START                      "\033["
+#define CSI_END                        "\033[0m"
 /* output log front color */
-#define F_BLACK                                       "30;"
-#define F_RED                                         "31;"
-#define F_GREEN                                       "32;"
-#define F_YELLOW                                      "33;"
-#define F_BLUE                                        "34;"
-#define F_MAGENTA                                     "35;"
-#define F_CYAN                                        "36;"
-#define F_WHITE                                       "37;"
+#define F_BLACK                        "30;"
+#define F_RED                          "31;"
+#define F_GREEN                        "32;"
+#define F_YELLOW                       "33;"
+#define F_BLUE                         "34;"
+#define F_MAGENTA                      "35;"
+#define F_CYAN                         "36;"
+#define F_WHITE                        "37;"
 /* output log background color */
 #define B_NULL
-#define B_BLACK                                       "40;"
-#define B_RED                                         "41;"
-#define B_GREEN                                       "42;"
-#define B_YELLOW                                      "43;"
-#define B_BLUE                                        "44;"
-#define B_MAGENTA                                     "45;"
-#define B_CYAN                                        "46;"
-#define B_WHITE                                       "47;"
+#define B_BLACK                        "40;"
+#define B_RED                          "41;"
+#define B_GREEN                        "42;"
+#define B_YELLOW                       "43;"
+#define B_BLUE                         "44;"
+#define B_MAGENTA                      "45;"
+#define B_CYAN                         "46;"
+#define B_WHITE                        "47;"
 /* output log fonts style */
-#define S_BOLD                                         "1m"
-#define S_UNDERLINE                                    "4m"
-#define S_BLINK                                        "5m"
-#define S_NORMAL                                      "22m"
+#define S_BOLD                         "1m"
+#define S_UNDERLINE                    "4m"
+#define S_BLINK                        "5m"
+#define S_NORMAL                       "22m"
 /* output log default color definition: [front color] + [background color] + [show style] */
 #ifndef ELOG_COLOR_ASSERT
-#define ELOG_COLOR_ASSERT       (F_MAGENTA B_NULL S_NORMAL)
+#define ELOG_COLOR_ASSERT              (F_MAGENTA B_NULL S_NORMAL)
 #endif
 #ifndef ELOG_COLOR_ERROR
-#define ELOG_COLOR_ERROR            (F_RED B_NULL S_NORMAL)
+#define ELOG_COLOR_ERROR               (F_RED B_NULL S_NORMAL)
 #endif
 #ifndef ELOG_COLOR_WARN
-#define ELOG_COLOR_WARN          (F_YELLOW B_NULL S_NORMAL)
+#define ELOG_COLOR_WARN                (F_YELLOW B_NULL S_NORMAL)
 #endif
 #ifndef ELOG_COLOR_INFO
-#define ELOG_COLOR_INFO            (F_CYAN B_NULL S_NORMAL)
+#define ELOG_COLOR_INFO                (F_CYAN B_NULL S_NORMAL)
 #endif
 #ifndef ELOG_COLOR_DEBUG
-#define ELOG_COLOR_DEBUG          (F_GREEN B_NULL S_NORMAL)
+#define ELOG_COLOR_DEBUG               (F_GREEN B_NULL S_NORMAL)
 #endif
 #ifndef ELOG_COLOR_VERBOSE
-#define ELOG_COLOR_VERBOSE         (F_BLUE B_NULL S_NORMAL)
+#define ELOG_COLOR_VERBOSE             (F_BLUE B_NULL S_NORMAL)
 #endif
+#endif /* ELOG_COLOR_ENABLE */
 
 /* EasyLogger object */
 static EasyLogger elog;
 /* every line log's buffer */
 static char log_buf[ELOG_LINE_BUF_SIZE] = { 0 };
-/* log tag */
-static const char *log_tag = "elog";
 /* level output info */
 static const char *level_output_info[] = {
         [ELOG_LVL_ASSERT]  = "A/",
@@ -120,6 +122,8 @@ static const char *level_output_info[] = {
         [ELOG_LVL_DEBUG]   = "D/",
         [ELOG_LVL_VERBOSE] = "V/",
 };
+
+#ifdef ELOG_COLOR_ENABLE
 /* color output info */
 static const char *color_output_info[] = {
         [ELOG_LVL_ASSERT]  = ELOG_COLOR_ASSERT,
@@ -129,6 +133,7 @@ static const char *color_output_info[] = {
         [ELOG_LVL_DEBUG]   = ELOG_COLOR_DEBUG,
         [ELOG_LVL_VERBOSE] = ELOG_COLOR_VERBOSE,
 };
+#endif /* ELOG_COLOR_ENABLE */
 
 static bool get_fmt_enabled(uint8_t level, size_t set);
 
@@ -168,11 +173,14 @@ ElogErrCode elog_init(void) {
     /* output locked status initialize */
     elog.output_is_locked_before_enable = false;
     elog.output_is_locked_before_disable = false;
+
+#ifdef ELOG_COLOR_ENABLE
     /* disable text color by default */
     elog_set_text_color_enabled(false);
+#endif
+
     /* set level is ELOG_LVL_VERBOSE */
     elog_set_filter_lvl(ELOG_LVL_VERBOSE);
-
 
     return result;
 }
@@ -183,9 +191,15 @@ ElogErrCode elog_init(void) {
 void elog_start(void) {
     /* enable output */
     elog_set_output_enabled(true);
+
+#if defined(ELOG_ASYNC_OUTPUT_ENABLE)
+    elog_async_enabled(true);
+#elif defined(ELOG_BUF_OUTPUT_ENABLE)
+    elog_buf_enabled(true);
+#endif
+
     /* show version */
-    elog_i(log_tag, "EasyLogger V%s is initialize success.", ELOG_SW_VERSION);
-    elog_i(log_tag, "You can get the latest version on https://github.com/armink/EasyLogger .");
+    log_i("EasyLogger V%s is initialize success.", ELOG_SW_VERSION);
 }
 
 /**
@@ -199,6 +213,7 @@ void elog_set_output_enabled(bool enabled) {
     elog.output_enabled = enabled;
 }
 
+#ifdef ELOG_COLOR_ENABLE
 /**
  * set log text color enable or disable
  * 
@@ -216,6 +231,7 @@ void elog_set_text_color_enabled(bool enabled) {
 bool elog_get_text_color_enabled(void) {
     return elog.text_color_enabled;
 }
+#endif /* ELOG_COLOR_ENABLE */
 
 /**
  * get output is enable or disable
@@ -341,7 +357,7 @@ void elog_raw(const char *format, ...) {
 #if defined(ELOG_ASYNC_OUTPUT_ENABLE)
     extern void elog_async_output(const char *log, size_t size);
     elog_async_output(log_buf, log_len);
-#elif defined(ELOG_BUFF_OUTPUT_ENABLE)
+#elif defined(ELOG_BUF_OUTPUT_ENABLE)
     extern void elog_buf_output(const char *log, size_t size);
     elog_buf_output(log_buf, log_len);
 #else
@@ -394,11 +410,15 @@ void elog_output(uint8_t level, const char *tag, const char *file, const char *f
     va_start(args, format);
     /* lock output */
     elog_output_lock();
+
+#ifdef ELOG_COLOR_ENABLE
     /* add CSI start sign and color info */
     if (elog.text_color_enabled) {
         log_len += elog_strcpy(log_len, log_buf + log_len, CSI_START);
         log_len += elog_strcpy(log_len, log_buf + log_len, color_output_info[level]);
     }
+#endif
+
     /* package level info */
     if (get_fmt_enabled(level, ELOG_FMT_LVL)) {
         log_len += elog_strcpy(log_len, log_buf + log_len, level_output_info[level]);
@@ -467,10 +487,14 @@ void elog_output(uint8_t level, const char *tag, const char *file, const char *f
     fmt_result = vsnprintf(log_buf + log_len, ELOG_LINE_BUF_SIZE - log_len - newline_len + 1, format, args);
 
     va_end(args);
+
+#ifdef ELOG_COLOR_ENABLE
     /* add CSI end sign */
     if (elog.text_color_enabled) {
         log_len += elog_strcpy(log_len, log_buf + log_len + fmt_result, CSI_END);
     }
+#endif
+
     /* keyword filter */
     if (!strstr(log_buf, elog.filter.keyword)) {
         //TODO 可以考虑采用KMP及朴素模式匹配字符串，提升性能
@@ -491,7 +515,7 @@ void elog_output(uint8_t level, const char *tag, const char *file, const char *f
 #if defined(ELOG_ASYNC_OUTPUT_ENABLE)
     extern void elog_async_output(const char *log, size_t size);
     elog_async_output(log_buf, log_len);
-#elif defined(ELOG_BUFF_OUTPUT_ENABLE)
+#elif defined(ELOG_BUF_OUTPUT_ENABLE)
     extern void elog_buf_output(const char *log, size_t size);
     elog_buf_output(log_buf, log_len);
 #else
@@ -546,4 +570,80 @@ void elog_output_lock_enabled(bool enabled) {
  */
 void elog_assert_set_hook(void (*hook)(const char* expr, const char* func, size_t line)) {
     elog_assert_hook = hook;
+}
+
+/**
+ * find the log level
+ * @note make sure the log level is output on each format
+ *
+ * @param log log buffer
+ *
+ * @return log level, found failed will return -1
+ */
+int8_t elog_find_lvl(const char *log) {
+    ELOG_ASSERT(log);
+    /* make sure the log level is output on each format */
+    ELOG_ASSERT(elog.enabled_fmt_set[ELOG_LVL_ASSERT] & ELOG_FMT_LVL);
+    ELOG_ASSERT(elog.enabled_fmt_set[ELOG_LVL_ERROR] & ELOG_FMT_LVL);
+    ELOG_ASSERT(elog.enabled_fmt_set[ELOG_LVL_WARN] & ELOG_FMT_LVL);
+    ELOG_ASSERT(elog.enabled_fmt_set[ELOG_LVL_INFO] & ELOG_FMT_LVL);
+    ELOG_ASSERT(elog.enabled_fmt_set[ELOG_LVL_DEBUG] & ELOG_FMT_LVL);
+    ELOG_ASSERT(elog.enabled_fmt_set[ELOG_LVL_VERBOSE] & ELOG_FMT_LVL);
+
+#ifdef ELOG_COLOR_ENABLE
+    uint8_t i;
+    size_t csi_start_len = strlen(CSI_START);
+    for(i = 0; i < ELOG_LVL_TOTAL_NUM; i ++) {
+        if (!strncmp(color_output_info[i], log + csi_start_len, strlen(color_output_info[i]))) {
+            return i;
+        }
+    }
+    /* found failed */
+    return -1;
+#else
+    switch (log[0]) {
+    case 'A': return ELOG_LVL_ASSERT;
+    case 'E': return ELOG_LVL_ERROR;
+    case 'W': return ELOG_LVL_WARN;
+    case 'I': return ELOG_LVL_INFO;
+    case 'D': return ELOG_LVL_DEBUG;
+    case 'V': return ELOG_LVL_VERBOSE;
+    default: return -1;
+    }
+#endif
+}
+
+/**
+ * find the log tag
+ * @note make sure the log tag is output on each format
+ * @note the tag don't have space in it
+ *
+ * @param log log buffer
+ * @param lvl log level, you can get it by @see elog_find_lvl
+ * @param tag_len found tag length
+ *
+ * @return log tag, found failed will return NULL
+ */
+const char *elog_find_tag(const char *log, uint8_t lvl, size_t *tag_len) {
+    const char *tag = NULL, *tag_end = NULL;
+
+    ELOG_ASSERT(log);
+    ELOG_ASSERT(tag_len);
+    ELOG_ASSERT(lvl < ELOG_LVL_TOTAL_NUM);
+    /* make sure the log tag is output on each format */
+    ELOG_ASSERT(elog.enabled_fmt_set[lvl] & ELOG_FMT_TAG);
+
+#ifdef ELOG_COLOR_ENABLE
+    tag = log + strlen(CSI_START) + strlen(color_output_info[lvl]) + strlen(level_output_info[lvl]);
+#else
+    tag = log + strlen(level_output_info[lvl]);
+#endif
+    /* find the first space after tag */
+    if ((tag_end = memchr(tag, ' ', ELOG_FILTER_TAG_MAX_LEN)) != NULL) {
+        *tag_len = tag_end - tag;
+    } else {
+        tag = NULL;
+    }
+
+    return tag;
 }

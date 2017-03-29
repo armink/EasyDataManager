@@ -63,6 +63,8 @@ static pthread_t async_output_thread;
 
 /* Initialize OK flag */
 static bool init_ok = false;
+/* asynchronous output mode enabled flag */
+static bool is_enabled = false;
 /* asynchronous output mode's ring buffer */
 static char log_buf[ELOG_ASYNC_OUTPUT_BUF_SIZE] = { 0 };
 /* log ring buffer write index */
@@ -146,6 +148,58 @@ __exit:
     return size;
 }
 
+#ifdef ELOG_ASYNC_LINE_OUTPUT
+/**
+ * Get line log from asynchronous output ring buffer.
+ * It will copy all log when the newline sign isn't find.
+ *
+ * @param log get line log buffer
+ * @param size line log size
+ *
+ * @return get line log size, the log size is less than ring buffer used size
+ */
+size_t elog_async_get_line_log(char *log, size_t size) {
+    size_t used = 0, cpy_log_size = 0;
+    /* lock output */
+    elog_output_lock();
+    used = elog_async_get_buf_used();
+
+    /* no log */
+    if (!used || !size) {
+        goto __exit;
+    }
+    /* less log */
+    if (used <= size) {
+        size = used;
+    }
+
+    if (read_index + size < ELOG_ASYNC_OUTPUT_BUF_SIZE) {
+        cpy_log_size = elog_cpyln(log, log_buf + read_index, size);
+        read_index += cpy_log_size;
+    } else {
+        cpy_log_size = elog_cpyln(log, log_buf + read_index, ELOG_ASYNC_OUTPUT_BUF_SIZE - read_index);
+        if (cpy_log_size == ELOG_ASYNC_OUTPUT_BUF_SIZE - read_index) {
+            cpy_log_size += elog_cpyln(log + cpy_log_size, log_buf, size - cpy_log_size);
+            read_index += cpy_log_size - ELOG_ASYNC_OUTPUT_BUF_SIZE;
+        } else {
+            read_index += cpy_log_size;
+        }
+    }
+
+    if (used == cpy_log_size) {
+        buf_is_empty = true;
+    }
+
+    if (cpy_log_size) {
+        buf_is_full = false;
+    }
+
+__exit:
+    /* lock output */
+    elog_output_unlock();
+    return cpy_log_size;
+}
+#else
 /**
  * get log from asynchronous output ring buffer
  *
@@ -160,7 +214,7 @@ size_t elog_async_get_log(char *log, size_t size) {
     elog_output_lock();
     used = elog_async_get_buf_used();
     /* no log */
-    if (!used) {
+    if (!used || !size) {
         size = 0;
         goto __exit;
     }
@@ -187,16 +241,21 @@ __exit:
     elog_output_unlock();
     return size;
 }
+#endif /* ELOG_ASYNC_LINE_OUTPUT */
 
 void elog_async_output(const char *log, size_t size) {
     /* this function must be implement by user when ELOG_ASYNC_OUTPUT_USING_PTHREAD is not defined */
     extern void elog_async_output_notice(void);
     size_t put_size;
 
-    put_size = async_put_log(log, size);
-    /* notify output log thread */
-    if (put_size > 0) {
-        elog_async_output_notice();
+    if (is_enabled) {
+        put_size = async_put_log(log, size);
+        /* notify output log thread */
+        if (put_size > 0) {
+            elog_async_output_notice();
+        }
+    } else {
+        elog_port_output(log, size);
     }
 }
 
@@ -216,7 +275,13 @@ static void *async_output(void *arg) {
         sem_wait(&output_notice);
         /* polling gets and outputs the log */
         while(true) {
-            get_log_size = elog_async_get_log(poll_get_buf, sizeof(poll_get_buf));
+
+#ifdef ELOG_ASYNC_LINE_OUTPUT
+            get_log_size = elog_async_get_line_log(poll_get_buf, ELOG_ASYNC_POLL_GET_LOG_BUF_SIZE);
+#else
+            get_log_size = elog_async_get_log(poll_get_buf, ELOG_ASYNC_POLL_GET_LOG_BUF_SIZE);
+#endif
+
             if (get_log_size) {
                 elog_port_output(poll_get_buf, get_log_size);
             } else {
@@ -227,6 +292,16 @@ static void *async_output(void *arg) {
     return NULL;
 }
 #endif
+
+/**
+ * enable or disable asynchronous output mode
+ * the log will be output directly when mode is disabled
+ *
+ * @param enabled true: enabled, false: disabled
+ */
+void elog_async_enabled(bool enabled) {
+    is_enabled = enabled;
+}
 
 /**
  * asynchronous output mode initialize

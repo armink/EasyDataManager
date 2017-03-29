@@ -7,21 +7,12 @@
  * Created on: 2014-01-10
  */
 
+#define LOG_TAG    "edm.refresher"
+
 #include "refresher.h"
 
 #ifdef EDM_USING_RTT
 
-#define LOG_TAG    "edm.refresher"
-#define assert     ELOG_ASSERT
-#define log_e(...) elog_e(LOG_TAG, __VA_ARGS__)
-#define log_w(...) elog_w(LOG_TAG, __VA_ARGS__)
-#define log_i(...) elog_i(LOG_TAG, __VA_ARGS__)
-
-#if EDM_DEBUG
-    #define log_d(...) elog_d(LOG_TAG, __VA_ARGS__)
-#else
-    #define log_d(...)
-#endif
 
 static RefresherErrCode add(pRefresher const refresher, const char* name, int8_t priority, uint32_t period,
         int16_t times, bool newThread, uint32_t satckSize, void (*refreshProcess)(void *arg));

@@ -12,24 +12,15 @@
  * 2009-01-05     Bernard      the first version
  */
 
+#define LOG_TAG    "app"
+
+#include <elog.h>
 #include <rthw.h>
 #include <rtthread.h>
 #include <stdio.h>
 #include <board.h>
 #include "cache.h"
 #include "refresher.h"
-#include <elog.h>
-
-#define assert     ELOG_ASSERT
-#define log_e(...) elog_e("app", __VA_ARGS__)
-#define log_w(...) elog_w("app", __VA_ARGS__)
-#define log_i(...) elog_i("app", __VA_ARGS__)
-
-#if EDM_DEBUG
-    #define log_d(...) elog_d("app", __VA_ARGS__)
-#else
-    #define log_d(...)
-#endif
 
 extern int  rt_application_init(void);
 

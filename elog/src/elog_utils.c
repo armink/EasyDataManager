@@ -1,7 +1,7 @@
 /*
  * This file is part of the EasyLogger Library.
  *
- * Copyright (c) 2015, Armink, <armink.ztl@gmail.com>
+ * Copyright (c) 2015-2017, Armink, <armink.ztl@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -27,6 +27,7 @@
  */
 
 #include <elog.h>
+#include <string.h>
 
 /**
  * another copy string function
@@ -39,6 +40,10 @@
  */
 size_t elog_strcpy(size_t cur_len, char *dst, const char *src) {
     const char *src_old = src;
+
+    assert(dst);
+    assert(src);
+
     while (*src != 0) {
         /* make sure destination has enough space */
         if (cur_len++ <= ELOG_LINE_BUF_SIZE) {
@@ -48,4 +53,51 @@ size_t elog_strcpy(size_t cur_len, char *dst, const char *src) {
         }
     }
     return src - src_old;
+}
+
+/**
+ * Copy line log split by newline sign. It will copy all log when the newline sign isn't find.
+ *
+ * @param line line log buffer
+ * @param log origin log buffer
+ * @param len origin log buffer length
+ *
+ * @return copy size
+ */
+size_t elog_cpyln(char *line, const char *log, size_t len) {
+    size_t newline_len = strlen(ELOG_NEWLINE_SIGN), copy_size = 0;
+
+    assert(line);
+    assert(log);
+
+    while (len--) {
+        *line++ = *log++;
+        copy_size++;
+        if (copy_size >= newline_len && !strncmp(log - newline_len, ELOG_NEWLINE_SIGN, newline_len)) {
+            break;
+        }
+    }
+    return copy_size;
+}
+
+/**
+ * This function will copy memory content from source address to destination
+ * address.
+ *
+ * @param dst the address of destination memory
+ * @param src  the address of source memory
+ * @param count the copied length
+ *
+ * @return the address of destination memory
+ */
+void *elog_memcpy(void *dst, const void *src, size_t count) {
+    char *tmp = (char *) dst, *s = (char *) src;
+
+    assert(dst);
+    assert(src);
+
+    while (count--)
+        *tmp++ = *s++;
+
+    return dst;
 }

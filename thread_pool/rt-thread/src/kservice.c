@@ -1069,8 +1069,7 @@ RTM_EXPORT(rt_console_set_device);
 #endif
 
 #if defined(__GNUC__) || defined(__ADSPBLACKFIN__)
-void rt_hw_console_output(const char *str) __attribute__((weak));
-void rt_hw_console_output(const char *str)
+__attribute__((weak)) void rt_hw_console_output(const char *str)
 #elif defined(__CC_ARM)
 __weak void rt_hw_console_output(const char *str)
 #elif defined(__IAR_SYSTEMS_ICC__)
@@ -1082,7 +1081,7 @@ void rt_hw_console_output(const char *str)
 void rt_hw_console_output(const char *str)
 #endif
 {
-
+    /* empty console output */
 }
 RTM_EXPORT(rt_hw_console_output);
 
@@ -1116,6 +1115,7 @@ void rt_kprintf(const char *fmt, ...)
         rt_device_write(_console_device, 0, rt_log_buf, length);
     }
 #else
+    printf("%s", rt_log_buf);
     rt_hw_console_output(rt_log_buf);
 #endif
     va_end(args);
